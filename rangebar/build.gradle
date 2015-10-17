@@ -1,7 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply from: '../maven_push.gradle'
 
 version = "1.1"
 group = "com.appyvet"
@@ -14,7 +11,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        minSdkVersion 12
+        minSdkVersion 14
         targetSdkVersion 23
     }
 
@@ -31,16 +28,8 @@ repositories {
     mavenCentral()
 }
 
-//signing {
-//    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-//    sign configurations.archives
-//}
-
 task publishLocal(type: Upload) {
     configuration = configurations.archives
-    repositories.mavenDeployer {
-        repository(url: "file://$buildDir/repo")
-    }
 
     task sourcesJar(type: Jar) {
         classifier = 'sources'

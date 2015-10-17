@@ -1,4 +1,4 @@
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 dependencies {
     compile project(':rangebar')
@@ -10,20 +10,18 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion 23
     }
     signingConfigs {
         release {
         }
     }
-    buildTypes {
-        release {
+    buildTypes.release {
 //            minifyEnabled true
 //            shrinkResources true
 //            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
-            signingConfig signingConfigs.release
-        }
+        signingConfig signingConfigs.release
     }
 
     sourceSets {
@@ -63,5 +61,5 @@ if (propFile.canRead()) {
 
 } else {
     println "RELEASE_BUILD: signing.properties not found"
-    android.buildTypes.release.signingProperties = null
+    //android.buildTypes.release.signingProperties = null
 }
