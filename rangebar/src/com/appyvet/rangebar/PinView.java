@@ -19,7 +19,7 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
-import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
@@ -52,11 +52,8 @@ class PinView extends View {
     // Indicates whether this thumb is currently pressed and active.
     private boolean mIsPressed = false;
 
-    // The y-position of the thumb in the parent view. This should not change.
-    private float mY;
-
-    // The current x-position of the thumb in the parent view.
-    private float mX;
+    // The current position of the thumb in the parent view.
+    private PointF mPosition;
 
     // mPaint to draw the thumbs if attributes are selected
 
@@ -108,21 +105,20 @@ class PinView extends View {
      * variables for the pin
      *
      * @param ctx          Context
-     * @param size         The measured size of this view
-     * @param padding      The 4 padding values of this view
+     * @param position     The position of this point in its parent's view
      * @param pinRadiusDP  the initial size of the pin
      * @param pinColor     the color of the pin
      * @param textColor    the color of the value text in the pin
      * @param circleRadius the radius of the selector circle
      * @param circleColor  the color of the selector circle
      */
-    public void init(Context ctx, Point size, Rect padding, float pinRadiusDP, int pinColor, int textColor,
+    public void init(Context ctx, PointF position, float pinRadiusDP, int pinColor, int textColor,
             float circleRadius, int circleColor, float minFont, float maxFont) {
 
         mRes = ctx.getResources();
         mPin = ContextCompat.getDrawable(ctx, R.drawable.rotate);
 
-        mY = size.y - padding.bottom;
+        mPosition = position;
 
         mDensity = getResources().getDisplayMetrics().density;
         mMinPinFont = minFont / mDensity;
@@ -172,13 +168,10 @@ class PinView extends View {
     }
 
     /**
-     * Set the x value of the pin
-     *
-     * @param x set x value of the pin
+     * Set the x-y position of the pin
      */
-    @Override
-    public void setX(float x) {
-        mX = x;
+    public void setPosition(PointF position) {
+        mPosition.set(position);
     }
 
 
@@ -187,9 +180,8 @@ class PinView extends View {
      *
      * @return x float value of the pin
      */
-    @Override
-    public float getX() {
-        return mX;
+    public PointF getPosition() {
+        return mPosition;
     }
 
 
@@ -198,7 +190,7 @@ class PinView extends View {
      *
      * @param x String value of the pin
      */
-    public void setXValue(String x) {
+    public void setLabel(String x) {
         mValue = x;
     }
 
@@ -249,19 +241,19 @@ class PinView extends View {
      * false otherwise
      */
     public boolean isInTargetZone(float x, float y) {
-        return (Math.abs(x - mX) <= mTargetRadiusPx
-                && Math.abs(y - mY + mPinPadding) <= mTargetRadiusPx);
+        return (Math.abs(x - mPosition.x) <= mTargetRadiusPx
+                && Math.abs(y - mPosition.y + mPinPadding) <= mTargetRadiusPx);
     }
 
     //Draw the circle regardless of pressed state. If pin size is >0 then also draw the pin and text
     @Override
     public void draw(Canvas canvas) {
-        canvas.drawCircle(mX, mY, mCircleRadiusPx, mCirclePaint);
+        canvas.drawCircle(mPosition.x, mPosition.y, mCircleRadiusPx, mCirclePaint);
         //Draw pin if pressed
         if (mPinRadiusPx > 0) {
-            mBounds.set((int) mX - mPinRadiusPx,
-                    (int) mY - (mPinRadiusPx * 2) - (int) mPinPadding,
-                    (int) mX + mPinRadiusPx, (int) mY - (int) mPinPadding);
+            mBounds.set((int) mPosition.x - mPinRadiusPx,
+                    (int) mPosition.y - (mPinRadiusPx * 2) - (int) mPinPadding,
+                    (int) mPosition.x + mPinRadiusPx, (int) mPosition.y - (int) mPinPadding);
             mPin.setBounds(mBounds);
             String text = mValue;
 
@@ -275,7 +267,7 @@ class PinView extends View {
             mPin.setColorFilter(mPinFilter);
             mPin.draw(canvas);
             canvas.drawText(text,
-                    mX, mY - mPinRadiusPx - mPinPadding + mTextYPadding,
+                    mPosition.x, mPosition.y - mPinRadiusPx - mPinPadding + mTextYPadding,
                     mTextPaint);
         }
         super.draw(canvas);

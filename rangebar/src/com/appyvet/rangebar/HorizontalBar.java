@@ -17,6 +17,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.TypedValue;
@@ -30,6 +31,13 @@ public class HorizontalBar extends Bar {
     // Member Variables ////////////////////////////////////////////////////////
 
     float mTickDistance;
+
+    // Endpoints of the horizontal bar
+    final float mLeftX;
+    final float mRightX;
+
+    // Y position of the horizontal bar
+    final float mY;
 
     // Constructor /////////////////////////////////////////////////////////////
 
@@ -56,58 +64,56 @@ public class HorizontalBar extends Bar {
             barWeight, barColor,
             connectingWeight, connectingColor);
 
-        mTickDistance = (size.x - padding.left - padding.right) / tickCount;
+        mTickDistance = (size.x - padding.left - padding.right) / (tickCount - 1);
+
+        mLeftX = padding.left;
+        mRightX = size.x - padding.right;
+        mY = size.y - padding.bottom;
     }
 
-    /**
-     * Draws the bar on the given Canvas.
-     *
-     * @param canvas Canvas to draw on; should be the Canvas passed into {#link
-     *               View#onDraw()}
-     */
+    @Override
     public void draw(Canvas canvas) {
         canvas.drawLine(mLeftX, mY, mRightX, mY, mBarPaint);
     }
 
-    /**
-     * Gets the x-coordinate of the nearest tick to the given x-coordinate.
-     *
-     * @param thumb the thumb to find the nearest tick for
-     * @return the x-coordinate of the nearest tick
-     */
-    public float getNearestTickCoordinate(PinView thumb) {
-
-        final int nearestTickIndex = getNearestTickIndex(thumb);
-
-        return mLeftX + (nearestTickIndex * mTickDistance);
+    @Override
+    public void getNearestPointOnBar(PointF out, PointF point) {
+        out.set(Math.min(mRightX, Math.max(mLeftX, point.x)), mY);
     }
 
-    /**
-     * Gets the zero-based index of the nearest tick to the given thumb.
-     *
-     * @param thumb the Thumb to find the nearest tick for
-     * @return the zero-based index of the nearest tick
-     */
-    public int getNearestTickIndex(PinView thumb) {
-
-        return (int) ((thumb.getX() - mLeftX + mTickDistance / 2f) / mTickDistance);
+    @Override
+    public void getNearestTickPosition(PointF out, PointF point) {
+        final int nearestTickIndex = getNearestTickIndex(point);
+        out.set(mLeftX + (nearestTickIndex * mTickDistance), mY);
     }
 
-    /**
-     * Draws the tick marks on the bar.
-     *
-     * @param canvas Canvas to draw on; should be the Canvas passed into {#link
-     *               View#onDraw()}
-     */
-    public void drawTicks(Canvas canvas) {
-
-        // Loop through and draw each tick (except final tick).
-        for (int i = 0; i < mNumSegments; i++) {
-            final float x = i * mTickDistance + mLeftX;
-            canvas.drawCircle(x, mY, mTickHeight, mTickPaint);
+    @Override
+    public void getPointOfTick(PointF out, int index) {
+        if (index == mTickCount - 1) {
+            // Avoid any rounding discrepancies
+            out.set(mRightX, mY);
         }
-        // Draw final tick. We draw the final tick outside the loop to avoid any
-        // rounding discrepancies.
-        canvas.drawCircle(mRightX, mY, mTickHeight, mTickPaint);
+        else {
+            out.set(index * mTickDistance + mLeftX, mY);
+        }
     }
+
+    @Override
+    public int getNearestTickIndex(PointF point) {
+        return (int) ((point.x - mLeftX + mTickDistance / 2f) / mTickDistance);
+    }
+
+    @Override
+    public void drawConnectingLine(Canvas canvas, PinView leftThumb, PinView rightThumb) {
+        PointF left = leftThumb.getPosition();
+        PointF right = rightThumb.getPosition();
+        canvas.drawLine(left.x, left.y, right.x, right.y, mConnectingLinePaint);
+    }
+
+    @Override
+    public void drawConnectingLine(Canvas canvas, float leftMargin, PinView rightThumb) {
+        PointF right = rightThumb.getPosition();
+        canvas.drawLine(leftMargin, right.y, right.x, right.y, mConnectingLinePaint);
+    }
+
 }
