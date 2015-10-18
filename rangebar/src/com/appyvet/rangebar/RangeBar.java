@@ -154,8 +154,6 @@ public class RangeBar extends View {
 
     private OnRangeBarTextListener mPinTextListener;
 
-    private HashMap<Float, String> mTickMap;
-
     private int mLeftIndex;
 
     private int mRightIndex;
@@ -331,27 +329,7 @@ public class RangeBar extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
-        final Context ctx = getContext();
-
         // This is the initial point at which we know the size of the View.
-
-        // Create the two thumb objects and position line in view
-        float density = getResources().getDisplayMetrics().density;
-        float expandedPinRadius = mExpandedPinRadius / density;
-
-        Rect padding = new Rect(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
-        Point size = new Point(w, h);
-
-        if (mIsRangeBar) {
-            mLeftThumb = new PinView(ctx);
-            mLeftThumb.setFormatter(mFormatter);
-            mLeftThumb.init(ctx, size, padding, expandedPinRadius, mPinColor, mTextColor, mCircleSize,
-                    mCircleColor, mMinPinFont, mMaxPinFont);
-        }
-        mRightThumb = new PinView(ctx);
-        mRightThumb.setFormatter(mFormatter);
-        mRightThumb.init(ctx, size, padding, expandedPinRadius, mPinColor, mTextColor, mCircleSize,
-            mCircleColor, mMinPinFont, mMaxPinFont);
 
         // Create the underlying bar.
         createBar();
@@ -366,8 +344,8 @@ public class RangeBar extends View {
         if (newLeftIndex != mLeftIndex || newRightIndex != mRightIndex) {
             if (mListener != null) {
                 mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-                        getPinValue(mLeftIndex),
-                        getPinValue(mRightIndex));
+                    getPinValue(mLeftIndex),
+                    getPinValue(mRightIndex));
             }
         }
     }
@@ -385,7 +363,7 @@ public class RangeBar extends View {
             }
             mLeftThumb.draw(canvas);
         } else {
-            mBar.drawConnectingLine(canvas, getMarginLeft(), mRightThumb);
+            mBar.drawConnectingLine(canvas, getPaddingLeft(), mRightThumb);
             if (drawTicks) {
                 mBar.drawTicks(canvas);
             }
@@ -978,10 +956,6 @@ public class RangeBar extends View {
      * @param attrs   AttributeSet from the constructor.
      */
     private void rangeBarInit(Context context, AttributeSet attrs) {
-        //TODO tick value map
-        if (mTickMap == null) {
-            mTickMap = new HashMap<Float, String>();
-        }
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.RangeBar, 0, 0);
 
         try {
@@ -1097,16 +1071,19 @@ public class RangeBar extends View {
 
         if (mIsRangeBar) {
             mLeftThumb = new PinView(ctx);
-            mLeftThumb.init(ctx, size, padding, 0, mPinColor, mTextColor, mCircleSize, mCircleColor,
-                    mMinPinFont, mMaxPinFont);
+            mLeftThumb.init(ctx, size, padding,
+                0, mPinColor, mTextColor,
+                mCircleSize, mCircleColor,
+                mMinPinFont, mMaxPinFont);
         }
         mRightThumb = new PinView(ctx);
-        mRightThumb
-                .init(ctx, size, padding, 0, mPinColor, mTextColor, mCircleSize, mCircleColor, mMinPinFont,
-                        mMaxPinFont);
+        mRightThumb.init(ctx, size, padding,
+            0, mPinColor, mTextColor,
+            mCircleSize, mCircleColor,
+            mMinPinFont, mMaxPinFont);
 
-        float marginLeft = getMarginLeft();
-        float barLength = getBarLength();
+        float marginLeft = getPaddingLeft();
+        float barLength = getWidth() - getPaddingLeft() - getPaddingRight();
 
         // Initialize thumbs to the desired indices
         if (mIsRangeBar) {
@@ -1117,24 +1094,6 @@ public class RangeBar extends View {
         mRightThumb.setXValue(getPinValue(mRightIndex));
 
         invalidate();
-    }
-
-    /**
-     * Get marginLeft in each of the public attribute methods.
-     *
-     * @return float marginLeft
-     */
-    private float getMarginLeft() {
-        return getPaddingLeft();
-    }
-
-    /**
-     * Get barLength in each of the public attribute methods.
-     *
-     * @return float barLength
-     */
-    private float getBarLength() {
-        return getWidth() - getPaddingLeft() - getPaddingRight();
     }
 
     /**
@@ -1371,13 +1330,11 @@ public class RangeBar extends View {
         float tickValue = (tickIndex == (mTickCount - 1))
                 ? mTickEnd
                 : (tickIndex * mTickInterval) + mTickStart;
-        String xValue = mTickMap.get(tickValue);
-        if (xValue == null) {
-            if (tickValue == Math.ceil(tickValue)) {
-                xValue = String.valueOf((int) tickValue);
-            } else {
-                xValue = String.valueOf(tickValue);
-            }
+        String xValue;
+        if (tickValue == Math.ceil(tickValue)) {
+            xValue = String.valueOf((int) tickValue);
+        } else {
+            xValue = String.valueOf(tickValue);
         }
         return mPinTextFormatter.getText(xValue);
     }
