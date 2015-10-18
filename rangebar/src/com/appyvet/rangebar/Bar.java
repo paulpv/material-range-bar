@@ -16,32 +16,33 @@ package com.appyvet.rangebar;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.TypedValue;
 
 /**
  * This class represents the underlying gray bar in the RangeBar (without the
  * thumbs).
  */
-public class Bar {
+public abstract class Bar {
 
     // Member Variables ////////////////////////////////////////////////////////
 
-    private final Paint mBarPaint;
-
-    private final Paint mTickPaint;
+    final Paint mBarPaint;
+    final Paint mTickPaint;
+    final Paint mConnectingLinePaint;
 
     // Left-coordinate of the horizontal bar.
-    private final float mLeftX;
+    final float mLeftX;
 
-    private final float mRightX;
+    final float mRightX;
 
-    private final float mY;
+    final float mY;
 
-    private int mNumSegments;
+    int mNumSegments;
 
-    private float mTickDistance;
-
-    private final float mTickHeight;
+    final float mTickHeight;
 
     // Constructor /////////////////////////////////////////////////////////////
 
@@ -50,9 +51,9 @@ public class Bar {
      * Bar constructor
      *
      * @param ctx          the context
-     * @param x            the start x co-ordinate
+     * @param size         the start x co-ordinate
      * @param y            the y co-ordinate
-     * @param length       the length of the bar in px
+     * @param padding      the length of the bar in px
      * @param tickCount    the number of ticks on the bar
      * @param tickHeightDP the height of each tick
      * @param tickColor    the color of each tick
@@ -60,47 +61,44 @@ public class Bar {
      * @param barColor     the color of the bar
      */
     public Bar(Context ctx,
-            float x,
-            float y,
-            float length,
+            Point size,
+            Rect padding,
             int tickCount,
             float tickHeightDP,
             int tickColor,
             float barWeight,
-            int barColor) {
+            int barColor,
+            float connectingWeight,
+            int connectingColor
+        ) {
 
-        mLeftX = x;
-        mRightX = x + length;
-        mY = y;
+        mLeftX = padding.left;
+        mRightX = size.x - padding.right;
+        mY = size.y - padding.bottom;
 
         mNumSegments = tickCount - 1;
-        mTickDistance = length / mNumSegments;
         mTickHeight = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                tickHeightDP,
-                ctx.getResources().getDisplayMetrics());
+                tickHeightDP, ctx.getResources().getDisplayMetrics());
 
         // Initialize the paint.
         mBarPaint = new Paint();
         mBarPaint.setColor(barColor);
         mBarPaint.setStrokeWidth(barWeight);
         mBarPaint.setAntiAlias(true);
+        mBarPaint.setStyle(Paint.Style.STROKE);
+
         mTickPaint = new Paint();
         mTickPaint.setColor(tickColor);
         mTickPaint.setStrokeWidth(barWeight);
         mTickPaint.setAntiAlias(true);
-    }
 
-    // Package-Private Methods /////////////////////////////////////////////////
+        // Initialize the paint, set values
+        mConnectingLinePaint = new Paint();
+        mConnectingLinePaint.setColor(connectingColor);
+        mConnectingLinePaint.setStrokeWidth(connectingWeight);
+        mConnectingLinePaint.setStrokeCap(Paint.Cap.ROUND);
+        mConnectingLinePaint.setAntiAlias(true);
 
-    /**
-     * Draws the bar on the given Canvas.
-     *
-     * @param canvas Canvas to draw on; should be the Canvas passed into {#link
-     *               View#onDraw()}
-     */
-    public void draw(Canvas canvas) {
-
-        canvas.drawLine(mLeftX, mY, mRightX, mY, mBarPaint);
     }
 
     /**
@@ -122,17 +120,44 @@ public class Bar {
     }
 
     /**
+     * Draw the connecting line between the two thumbs in rangebar.
+     *
+     * @param canvas     the Canvas to draw to
+     * @param leftThumb  the left thumb
+     * @param rightThumb the right thumb
+     */
+    public void drawConnectingLine(Canvas canvas, PinView leftThumb, PinView rightThumb) {
+        canvas.drawLine(leftThumb.getX(), mY, rightThumb.getX(), mY, mConnectingLinePaint);
+    }
+
+    /**
+     * Draw the connecting line between for single slider.
+     *
+     * @param canvas     the Canvas to draw to
+     * @param rightThumb the right thumb
+     * @param leftMargin the left margin
+     */
+    public void drawConnectingLine(Canvas canvas, float leftMargin, PinView rightThumb) {
+        canvas.drawLine(leftMargin, mY, rightThumb.getX(), mY, mConnectingLinePaint);
+    }
+
+    // Abstract Methods /////////////////////////////////////////////////
+
+    /**
+     * Draws the bar on the given Canvas.
+     *
+     * @param canvas Canvas to draw on; should be the Canvas passed into {#link
+     *               View#onDraw()}
+     */
+    public abstract void draw(Canvas canvas);
+
+    /**
      * Gets the x-coordinate of the nearest tick to the given x-coordinate.
      *
      * @param thumb the thumb to find the nearest tick for
      * @return the x-coordinate of the nearest tick
      */
-    public float getNearestTickCoordinate(PinView thumb) {
-
-        final int nearestTickIndex = getNearestTickIndex(thumb);
-
-        return mLeftX + (nearestTickIndex * mTickDistance);
-    }
+    public abstract float getNearestTickCoordinate(PinView thumb);
 
     /**
      * Gets the zero-based index of the nearest tick to the given thumb.
@@ -140,26 +165,7 @@ public class Bar {
      * @param thumb the Thumb to find the nearest tick for
      * @return the zero-based index of the nearest tick
      */
-    public int getNearestTickIndex(PinView thumb) {
-
-        return (int) ((thumb.getX() - mLeftX + mTickDistance / 2f) / mTickDistance);
-    }
-
-
-    /**
-     * Set the number of ticks that will appear in the RangeBar.
-     *
-     * @param tickCount the number of ticks
-     */
-    public void setTickCount(int tickCount) {
-
-        final float barLength = mRightX - mLeftX;
-
-        mNumSegments = tickCount - 1;
-        mTickDistance = barLength / mNumSegments;
-    }
-
-    // Private Methods /////////////////////////////////////////////////////////
+    public abstract int getNearestTickIndex(PinView thumb);
 
     /**
      * Draws the tick marks on the bar.
@@ -167,15 +173,5 @@ public class Bar {
      * @param canvas Canvas to draw on; should be the Canvas passed into {#link
      *               View#onDraw()}
      */
-    public void drawTicks(Canvas canvas) {
-
-        // Loop through and draw each tick (except final tick).
-        for (int i = 0; i < mNumSegments; i++) {
-            final float x = i * mTickDistance + mLeftX;
-            canvas.drawCircle(x, mY, mTickHeight, mTickPaint);
-        }
-        // Draw final tick. We draw the final tick outside the loop to avoid any
-        // rounding discrepancies.
-        canvas.drawCircle(mRightX, mY, mTickHeight, mTickPaint);
-    }
+    public abstract void drawTicks(Canvas canvas);
 }

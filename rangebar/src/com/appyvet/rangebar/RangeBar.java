@@ -30,6 +30,8 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -148,8 +150,6 @@ public class RangeBar extends View {
 
     private Bar mBar;
 
-    private ConnectingLine mConnectingLine;
-
     private OnRangeBarChangeListener mListener;
 
     private OnRangeBarTextListener mPinTextListener;
@@ -163,8 +163,6 @@ public class RangeBar extends View {
     private boolean mIsRangeBar = true;
 
     private float mPinPadding = DEFAULT_PIN_PADDING_DP;
-
-    private float mBarPaddingBottom = DEFAULT_BAR_PADDING_BOTTOM_DP;
 
     private int mActiveConnectingLineColor;
 
@@ -242,7 +240,6 @@ public class RangeBar extends View {
         bundle.putFloat("THUMB_RADIUS_DP", mThumbRadiusDP);
         bundle.putFloat("EXPANDED_PIN_RADIUS_DP", mExpandedPinRadius);
         bundle.putFloat("PIN_PADDING", mPinPadding);
-        bundle.putFloat("BAR_PADDING_BOTTOM", mBarPaddingBottom);
         bundle.putBoolean("IS_RANGE_BAR", mIsRangeBar);
         bundle.putBoolean("ARE_PINS_TEMPORARY", mArePinsTemporary);
         bundle.putInt("LEFT_INDEX", mLeftIndex);
@@ -279,7 +276,6 @@ public class RangeBar extends View {
             mThumbRadiusDP = bundle.getFloat("THUMB_RADIUS_DP");
             mExpandedPinRadius = bundle.getFloat("EXPANDED_PIN_RADIUS_DP");
             mPinPadding = bundle.getFloat("PIN_PADDING");
-            mBarPaddingBottom = bundle.getFloat("BAR_PADDING_BOTTOM");
             mIsRangeBar = bundle.getBoolean("IS_RANGE_BAR");
             mArePinsTemporary = bundle.getBoolean("ARE_PINS_TEMPORARY");
 
@@ -333,7 +329,6 @@ public class RangeBar extends View {
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-
         super.onSizeChanged(w, h, oldw, oldh);
 
         final Context ctx = getContext();
@@ -344,32 +339,24 @@ public class RangeBar extends View {
         float density = getResources().getDisplayMetrics().density;
         float expandedPinRadius = mExpandedPinRadius / density;
 
-        final float yPos = h - mBarPaddingBottom;
+        Rect padding = new Rect(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
+        Point size = new Point(w, h);
+
         if (mIsRangeBar) {
             mLeftThumb = new PinView(ctx);
             mLeftThumb.setFormatter(mFormatter);
-            mLeftThumb.init(ctx, yPos, expandedPinRadius, mPinColor, mTextColor, mCircleSize,
+            mLeftThumb.init(ctx, size, padding, expandedPinRadius, mPinColor, mTextColor, mCircleSize,
                     mCircleColor, mMinPinFont, mMaxPinFont);
         }
         mRightThumb = new PinView(ctx);
         mRightThumb.setFormatter(mFormatter);
-        mRightThumb.init(ctx, yPos, expandedPinRadius, mPinColor, mTextColor, mCircleSize,
-                mCircleColor, mMinPinFont, mMaxPinFont);
+        mRightThumb.init(ctx, size, padding, expandedPinRadius, mPinColor, mTextColor, mCircleSize,
+            mCircleColor, mMinPinFont, mMaxPinFont);
 
         // Create the underlying bar.
-        final float marginLeft = mExpandedPinRadius;
+        createBar();
 
-        final float barLength = w - (2 * marginLeft);
-        mBar = new Bar(ctx, marginLeft, yPos, barLength, mTickCount, mTickHeightDP, mTickColor,
-                mBarWeight, mBarColor);
-
-        // Initialize thumbs to the desired indices
-        if (mIsRangeBar) {
-            mLeftThumb.setX(marginLeft + (mLeftIndex / (float) (mTickCount - 1)) * barLength);
-            mLeftThumb.setXValue(getPinValue(mLeftIndex));
-        }
-        mRightThumb.setX(marginLeft + (mRightIndex / (float) (mTickCount - 1)) * barLength);
-        mRightThumb.setXValue(getPinValue(mRightIndex));
+        createPins();
 
         // Set the thumb indices.
         final int newLeftIndex = mIsRangeBar ? mBar.getNearestTickIndex(mLeftThumb) : 0;
@@ -383,10 +370,6 @@ public class RangeBar extends View {
                         getPinValue(mRightIndex));
             }
         }
-
-        // Create the line connecting the two thumbs.
-        mConnectingLine = new ConnectingLine(ctx, yPos, mConnectingLineWeight,
-                mConnectingLineColor);
     }
 
     @Override
@@ -396,13 +379,13 @@ public class RangeBar extends View {
 
         mBar.draw(canvas);
         if (mIsRangeBar) {
-            mConnectingLine.draw(canvas, mLeftThumb, mRightThumb);
+            mBar.drawConnectingLine(canvas, mLeftThumb, mRightThumb);
             if (drawTicks) {
                 mBar.drawTicks(canvas);
             }
             mLeftThumb.draw(canvas);
         } else {
-            mConnectingLine.draw(canvas, getMarginLeft(), mRightThumb);
+            mBar.drawConnectingLine(canvas, getMarginLeft(), mRightThumb);
             if (drawTicks) {
                 mBar.drawTicks(canvas);
             }
@@ -1042,8 +1025,8 @@ public class RangeBar extends View {
             mPinColor = ta.getColor(R.styleable.RangeBar_pinColor, DEFAULT_PIN_COLOR);
             mActiveBarColor = mBarColor;
             mCircleSize = ta.getDimension(R.styleable.RangeBar_selectorSize,
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_CIRCLE_SIZE_DP,
-                            getResources().getDisplayMetrics())
+                TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_CIRCLE_SIZE_DP,
+                    getResources().getDisplayMetrics())
             );
             mCircleColor = ta.getColor(R.styleable.RangeBar_selectorColor,
                     DEFAULT_CONNECTING_LINE_COLOR);
@@ -1051,19 +1034,16 @@ public class RangeBar extends View {
             mTickColor = ta.getColor(R.styleable.RangeBar_tickColor, DEFAULT_TICK_COLOR);
             mActiveTickColor = mTickColor;
             mConnectingLineWeight = ta.getDimension(R.styleable.RangeBar_connectingLineWeight,
-                    DEFAULT_CONNECTING_LINE_WEIGHT_PX);
+                DEFAULT_CONNECTING_LINE_WEIGHT_PX);
             mConnectingLineColor = ta.getColor(R.styleable.RangeBar_connectingLineColor,
                     DEFAULT_CONNECTING_LINE_COLOR);
             mActiveConnectingLineColor = mConnectingLineColor;
             mExpandedPinRadius = ta.getDimension(R.styleable.RangeBar_pinRadius,
                     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                            DEFAULT_EXPANDED_PIN_RADIUS_DP, getResources().getDisplayMetrics()));
+                        DEFAULT_EXPANDED_PIN_RADIUS_DP, getResources().getDisplayMetrics()));
             mPinPadding = ta.getDimension(R.styleable.RangeBar_pinPadding, TypedValue
                     .applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_PIN_PADDING_DP,
-                            getResources().getDisplayMetrics()));
-            mBarPaddingBottom = ta.getDimension(R.styleable.RangeBar_rangeBarPaddingBottom,
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                            DEFAULT_BAR_PADDING_BOTTOM_DP, getResources().getDisplayMetrics()));
+                        getResources().getDisplayMetrics()));
             mIsRangeBar = ta.getBoolean(R.styleable.RangeBar_rangeBar, true);
             mArePinsTemporary = ta.getBoolean(R.styleable.RangeBar_temporaryPins, true);
 
@@ -1083,15 +1063,19 @@ public class RangeBar extends View {
      * Creates a new mBar
      */
     private void createBar() {
-        mBar = new Bar(getContext(),
-                getMarginLeft(),
-                getYPos(),
-                getBarLength(),
+        Rect padding = new Rect(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
+        Point size = new Point(getWidth(), getHeight());
+
+        mBar = new HorizontalBar(getContext(),
+                size,
+                padding,
                 mTickCount,
                 mTickHeightDP,
                 mTickColor,
                 mBarWeight,
-                mBarColor);
+                mBarColor,
+                mConnectingLineWeight,
+                mConnectingLineColor);
         invalidate();
     }
 
@@ -1099,11 +1083,7 @@ public class RangeBar extends View {
      * Creates a new ConnectingLine.
      */
     private void createConnectingLine() {
-
-        mConnectingLine = new ConnectingLine(getContext(),
-                getYPos(),
-                mConnectingLineWeight,
-                mConnectingLineColor);
+        createBar();
         invalidate();
     }
 
@@ -1112,16 +1092,17 @@ public class RangeBar extends View {
      */
     private void createPins() {
         Context ctx = getContext();
-        float yPos = getYPos();
+        Rect padding = new Rect(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
+        Point size = new Point(getWidth(), getHeight());
 
         if (mIsRangeBar) {
             mLeftThumb = new PinView(ctx);
-            mLeftThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor,
+            mLeftThumb.init(ctx, size, padding, 0, mPinColor, mTextColor, mCircleSize, mCircleColor,
                     mMinPinFont, mMaxPinFont);
         }
         mRightThumb = new PinView(ctx);
         mRightThumb
-                .init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor, mMinPinFont,
+                .init(ctx, size, padding, 0, mPinColor, mTextColor, mCircleSize, mCircleColor, mMinPinFont,
                         mMaxPinFont);
 
         float marginLeft = getMarginLeft();
@@ -1144,16 +1125,7 @@ public class RangeBar extends View {
      * @return float marginLeft
      */
     private float getMarginLeft() {
-        return mExpandedPinRadius;
-    }
-
-    /**
-     * Get yPos in each of the public attribute methods.
-     *
-     * @return float yPos
-     */
-    private float getYPos() {
-        return (getHeight() - mBarPaddingBottom);
+        return getPaddingLeft();
     }
 
     /**
@@ -1162,7 +1134,7 @@ public class RangeBar extends View {
      * @return float barLength
      */
     private float getBarLength() {
-        return (getWidth() - 2 * getMarginLeft());
+        return getWidth() - getPaddingLeft() - getPaddingRight();
     }
 
     /**

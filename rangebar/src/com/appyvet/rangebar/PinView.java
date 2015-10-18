@@ -19,6 +19,7 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
@@ -107,18 +108,21 @@ class PinView extends View {
      * variables for the pin
      *
      * @param ctx          Context
-     * @param y            The y coordinate to raw the pin (i.e. the bar location)
+     * @param size         The measured size of this view
+     * @param padding      The 4 padding values of this view
      * @param pinRadiusDP  the initial size of the pin
      * @param pinColor     the color of the pin
      * @param textColor    the color of the value text in the pin
      * @param circleRadius the radius of the selector circle
      * @param circleColor  the color of the selector circle
      */
-    public void init(Context ctx, float y, float pinRadiusDP, int pinColor, int textColor,
+    public void init(Context ctx, Point size, Rect padding, float pinRadiusDP, int pinColor, int textColor,
             float circleRadius, int circleColor, float minFont, float maxFont) {
 
         mRes = ctx.getResources();
-            mPin = ContextCompat.getDrawable(ctx, R.drawable.rotate);
+        mPin = ContextCompat.getDrawable(ctx, R.drawable.rotate);
+
+        mY = size.y - padding.bottom;
 
         mDensity = getResources().getDisplayMetrics().density;
         mMinPinFont = minFont / mDensity;
@@ -149,6 +153,7 @@ class PinView extends View {
         mTextPaint.setColor(textColor);
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(textSize);
+
         // Creates the paint and sets the Paint values
         mCirclePaint = new Paint();
         mCirclePaint.setColor(circleColor);
@@ -164,7 +169,6 @@ class PinView extends View {
         mTargetRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 targetRadius,
                 mRes.getDisplayMetrics());
-        mY = y;
     }
 
     /**
