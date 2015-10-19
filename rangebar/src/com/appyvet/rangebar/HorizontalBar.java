@@ -41,7 +41,6 @@ public class HorizontalBar extends Bar {
 
     // Constructor /////////////////////////////////////////////////////////////
 
-
     /**
      * Bar constructor
      *
@@ -63,19 +62,8 @@ public class HorizontalBar extends Bar {
     }
 
     @Override
-    public void draw(Canvas canvas) {
-        canvas.drawLine(mLeftX, mY, mRightX, mY, mBarPaint);
-    }
-
-    @Override
     public void getNearestPointOnBar(PointF out, PointF point) {
         out.set(Math.min(mRightX, Math.max(mLeftX, point.x)), mY);
-    }
-
-    @Override
-    public void getNearestTickPosition(PointF out, PointF point) {
-        final int nearestTickIndex = getNearestTickIndex(point);
-        out.set(mLeftX + (nearestTickIndex * mTickDistance), mY);
     }
 
     @Override
@@ -95,16 +83,13 @@ public class HorizontalBar extends Bar {
     }
 
     @Override
-    public void drawConnectingLine(Canvas canvas, PinView leftThumb, PinView rightThumb) {
-        PointF left = leftThumb.getPosition();
-        PointF right = rightThumb.getPosition();
-        canvas.drawLine(left.x, left.y, right.x, right.y, mConnectingLinePaint);
+    public void draw(Canvas canvas) {
+        canvas.drawLine(mLeftX, mY, mRightX, mY, mBarPaint);
     }
 
     @Override
-    public void drawConnectingLine(Canvas canvas, float leftMargin, PinView rightThumb) {
-        PointF right = rightThumb.getPosition();
-        canvas.drawLine(leftMargin, right.y, right.x, right.y, mConnectingLinePaint);
+    public void drawConnectingLine(Canvas canvas, PointF left, PointF right) {
+        canvas.drawLine(left.x, mY, right.x, mY, mConnectingLinePaint);
     }
 
 }

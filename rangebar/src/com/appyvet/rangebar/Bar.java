@@ -32,6 +32,8 @@ public abstract class Bar {
 	int mTickCount;
 	float mTickSize;
 
+	PointF mTmpPoint;
+
 	// Constructor /////////////////////////////////////////////////////////////
 
 
@@ -50,7 +52,10 @@ public abstract class Bar {
 		// Initialize the paint, set values
 		mConnectingLinePaint = new Paint();
 		mConnectingLinePaint.setStrokeCap(Paint.Cap.ROUND);
+		mConnectingLinePaint.setStyle(Paint.Style.STROKE);
 		mConnectingLinePaint.setAntiAlias(true);
+
+		mTmpPoint = new PointF();
 	}
 
 	public void setBar(int color, float width) {
@@ -76,11 +81,9 @@ public abstract class Bar {
 	 *               View#onDraw()}
 	 */
 	public void drawTicks(Canvas canvas) {
-		PointF tick = new PointF();
-
 		for (int i = 0; i < mTickCount; i++) {
-			getPointOfTick(tick, i);
-			canvas.drawCircle(tick.x, tick.y, mTickSize, mTickPaint);
+			getPointOfTick(mTmpPoint, i);
+			canvas.drawCircle(mTmpPoint.x, mTmpPoint.y, mTickSize, mTickPaint);
 		}
 	}
 
@@ -94,23 +97,40 @@ public abstract class Bar {
 		return getNearestTickIndex(thumb.getPosition());
 	}
 
-	// Abstract Methods /////////////////////////////////////////////////
-
 	/**
-	 * Draws the bar on the given Canvas.
-	 *
-	 * @param canvas Canvas to draw on; should be the Canvas passed into {#link
-	 *               View#onDraw()}
-	 */
-	public abstract void draw(Canvas canvas);
-
-	/**
-	 * Gets the x-coordinate of the nearest tick to the given point.
+	 * Gets the x/y-coordinates of the nearest tick to the given point.
 	 *
 	 * @param out   the nearest tick will be stored in this object
 	 * @param point the point of the nearest tick
 	 */
-	public abstract void getNearestTickPosition(PointF out, PointF point);
+	public void getNearestTickPosition(PointF out, PointF point) {
+		final int nearestTickIndex = getNearestTickIndex(point);
+		getPointOfTick(out, nearestTickIndex);
+	}
+
+	/**
+	 * Draw the connecting line between the two thumbs in RangeBar.
+	 *
+	 * @param canvas     the Canvas to draw to
+	 * @param leftThumb  the left thumb
+	 * @param rightThumb the right thumb
+	 */
+	public void drawConnectingLine(Canvas canvas, PinView leftThumb, PinView rightThumb) {
+		drawConnectingLine(canvas, leftThumb.getPosition(), rightThumb.getPosition());
+	}
+
+	/**
+	 * Draw the connecting line between for single slider.
+	 *
+	 * @param canvas     the Canvas to draw to
+	 * @param rightThumb the right thumb
+	 */
+	public void drawConnectingLine(Canvas canvas, PinView rightThumb) {
+		getPointOfTick(mTmpPoint, 0);
+		drawConnectingLine(canvas, mTmpPoint, rightThumb.getPosition());
+	}
+
+	// Abstract Methods /////////////////////////////////////////////////
 
 	/**
 	 * Gets the point on the bar nearest to the passed point.
@@ -134,21 +154,20 @@ public abstract class Bar {
 	public abstract void getPointOfTick(PointF out, int index);
 
 	/**
-	 * Draw the connecting line between the two thumbs in rangebar.
+	 * Draws the bar on the given Canvas.
 	 *
-	 * @param canvas     the Canvas to draw to
-	 * @param leftThumb  the left thumb
-	 * @param rightThumb the right thumb
+	 * @param canvas Canvas to draw on; should be the Canvas passed into {#link
+	 *               View#onDraw()}
 	 */
-	public abstract void drawConnectingLine(Canvas canvas, PinView leftThumb, PinView rightThumb);
+	public abstract void draw(Canvas canvas);
 
 	/**
-	 * Draw the connecting line between for single slider.
+	 * Draw a connecting line between two points that have been precalculated to be on the bar.
 	 *
-	 * @param canvas     the Canvas to draw to
-	 * @param rightThumb the right thumb
-	 * @param leftMargin the left margin
+	 * @param canvas
+	 * @param point1
+	 * @param point2
 	 */
-	public abstract void drawConnectingLine(Canvas canvas, float leftMargin, PinView rightThumb);
+	public abstract void drawConnectingLine(Canvas canvas, PointF point1, PointF point2);
 
 }

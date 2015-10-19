@@ -339,7 +339,8 @@ public class RangeBar extends View {
 		Rect padding = new Rect(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
 		Point size = new Point(getWidth(), getHeight());
 
-		mBar = new HorizontalBar(size, padding);
+		//mBar = new HorizontalBar(size, padding);
+		mBar = new ArcBar(size, padding);
 		mBar.setBar(mBarColor, mBarWeight);
 		mBar.setTick(mTickCount, mTickColor, mTickSize);
 		mBar.setConnectingLine(mConnectingLineColor, mConnectingLineWeight);
@@ -366,18 +367,15 @@ public class RangeBar extends View {
 		super.onDraw(canvas);
 
 		mBar.draw(canvas);
+		if (drawTicks) {
+			mBar.drawTicks(canvas);
+		}
 		if (mIsRangeBar) {
-			if (drawTicks) {
-				mBar.drawTicks(canvas);
-			}
 			mBar.drawConnectingLine(canvas, mLeftThumb, mRightThumb);
 			mLeftThumb.draw(canvas);
 		}
 		else {
-			if (drawTicks) {
-				mBar.drawTicks(canvas);
-			}
-			mBar.drawConnectingLine(canvas, getPaddingLeft(), mRightThumb);
+			mBar.drawConnectingLine(canvas, mRightThumb);
 		}
 		mRightThumb.draw(canvas);
 
@@ -1282,6 +1280,7 @@ public class RangeBar extends View {
 		mBar.getNearestTickPosition(point, thumb.getPosition());
 		thumb.setPosition(point);
 		int tickIndex = mBar.getNearestTickIndex(thumb);
+
 		thumb.setLabel(getPinValue(tickIndex));
 
 		if (mArePinsTemporary) {
