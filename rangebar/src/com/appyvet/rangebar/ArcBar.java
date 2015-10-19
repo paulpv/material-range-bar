@@ -17,6 +17,7 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 /**
  * This class represents the underlying gray bar in the RangeBar (without the
@@ -29,8 +30,9 @@ public class ArcBar extends Bar {
 
 	// Member Variables ////////////////////////////////////////////////////////
 
-	private PointF mCenter;
-	private float mRadius;
+	private PointF mCenter = new PointF();
+	private float mRadius = 1f;
+	private RectF mBounds = new RectF();
 
 	// Constructor /////////////////////////////////////////////////////////////
 
@@ -44,8 +46,33 @@ public class ArcBar extends Bar {
 		super();
 		float w = size.x - padding.left - padding.right;
 		float h = size.y - padding.top - padding.bottom;
-		mCenter = new PointF(w / 2f + padding.left, h / 2f + padding.top);
-		mRadius = Math.min(w, h) / 2f - 16f;
+
+		calculateBounds();
+
+		float scale = Math.min(w / mBounds.width(), h / mBounds.height());
+		mRadius *= scale;
+
+		calculateBounds();
+
+		float dx = -mBounds.left + w / 2 - mBounds.width() / 2 + padding.left;
+		float dy = -mBounds.top + h / 2 - mBounds.height() / 2 + padding.top;
+		mCenter.offset(dx, dy);
+		mBounds.offset(dx, dy);
+	}
+
+	private void calculateBounds() {
+		PointF test = new PointF(mCenter.x - mRadius, mCenter.y);
+		getNearestPointOnBar(test, test);
+		mBounds.set(test.x, test.y, test.x, test.y);
+		test.set(mCenter.x + mRadius, mCenter.y);
+		getNearestPointOnBar(test, test);
+		mBounds.union(test.x, test.y);
+		test.set(mCenter.x, mCenter.y - mRadius);
+		getNearestPointOnBar(test, test);
+		mBounds.union(test.x, test.y);
+		test.set(mCenter.x, mCenter.y + mRadius);
+		getNearestPointOnBar(test, test);
+		mBounds.union(test.x, test.y);
 	}
 
 	@Override
@@ -92,6 +119,7 @@ public class ArcBar extends Bar {
 
 	/**
 	 * Returns the angle between 0 and the point.
+	 *
 	 * @param target
 	 * @return
 	 */
@@ -101,6 +129,7 @@ public class ArcBar extends Bar {
 
 	/**
 	 * Returns the angle between ARC_START and the point.
+	 *
 	 * @param target
 	 * @return
 	 */
