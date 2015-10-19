@@ -287,7 +287,6 @@ class PinView extends View {
         } else if (estimatedFontSize > mMaxPinFont) {
             estimatedFontSize = mMaxPinFont;
         }
-        Log.d("pin", "size = " + estimatedFontSize * mDensity);
         paint.setTextSize(estimatedFontSize * mDensity);
     }
 }

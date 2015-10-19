@@ -45,30 +45,21 @@ public class HorizontalBar extends Bar {
     /**
      * Bar constructor
      *
-     * @param ctx          the context
      * @param size         The measured size of this view
      * @param padding      The 4 padding values of this view
-     * @param tickCount    the number of ticks on the bar
-     * @param tickHeightDP the height of each tick
-     * @param tickColor    the color of each tick
-     * @param barWeight    the weight of the bar
-     * @param barColor     the color of the bar
      */
-    public HorizontalBar(Context ctx, Point size, Rect padding,
-        int tickCount, float tickHeightDP, int tickColor,
-        float barWeight, int barColor,
-        float connectingWeight, int connectingColor) {
-
-        super(ctx, size, padding,
-            tickCount, tickHeightDP, tickColor,
-            barWeight, barColor,
-            connectingWeight, connectingColor);
-
-        mTickDistance = (size.x - padding.left - padding.right) / (tickCount - 1);
+    public HorizontalBar(Point size, Rect padding) {
+        super();
 
         mLeftX = padding.left;
         mRightX = size.x - padding.right;
         mY = size.y - padding.bottom;
+    }
+
+    @Override
+    public void setTick(int count, int color, float size) {
+        super.setTick(count, color, size);
+        mTickDistance = (mRightX - mLeftX) / (mTickCount - 1);
     }
 
     @Override
