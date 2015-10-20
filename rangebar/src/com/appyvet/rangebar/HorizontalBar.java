@@ -62,6 +62,11 @@ public class HorizontalBar extends Bar {
     }
 
     @Override
+    public int comparePointsOnBar(PointF point1, PointF point2) {
+        return Float.compare(point1.x, point2.x);
+    }
+
+    @Override
     public void getNearestPointOnBar(PointF out, PointF point) {
         out.set(Math.min(mRightX, Math.max(mLeftX, point.x)), mY);
     }

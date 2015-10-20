@@ -133,6 +133,17 @@ public abstract class Bar {
 	// Abstract Methods /////////////////////////////////////////////////
 
 	/**
+	 * Compares the two points as they relate to the bar. If point1
+	 * is before point2, result will be <0. If they're at the same point,
+	 * 0, and if point1 is after point2, then result will be >0.
+	 *
+	 * @param point1
+	 * @param point2
+	 * @return
+	 */
+	public abstract int comparePointsOnBar(PointF point1, PointF point2);
+
+	/**
 	 * Gets the point on the bar nearest to the passed point.
 	 *
 	 * @param out   the nearest point will be stored in this object

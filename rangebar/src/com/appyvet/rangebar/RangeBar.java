@@ -39,6 +39,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 
 /**
  * The MaterialRangeBar is a single or double-sided version of a {@link android.widget.SeekBar}
@@ -168,18 +170,9 @@ public class RangeBar extends View {
 
 	private int mActiveCircleColor;
 
-	//Used for ignoring vertical moves
-	private int mDiffX;
-
-	private int mDiffY;
-
-	private float mLastX;
-
-	private float mLastY;
-
 	private IRangeBarFormatter mFormatter;
 
-	private boolean drawTicks = true;
+	private boolean mDrawTicks = true;
 
 	private boolean mArePinsTemporary = true;
 
@@ -367,7 +360,7 @@ public class RangeBar extends View {
 		super.onDraw(canvas);
 
 		mBar.draw(canvas);
-		if (drawTicks) {
+		if (mDrawTicks) {
 			mBar.drawTicks(canvas);
 		}
 		if (mIsRangeBar) {
@@ -381,6 +374,11 @@ public class RangeBar extends View {
 
 	}
 
+	private int mScaledTouchSlop;
+	private float mTouchDownX;
+	private float mTouchDownY;
+	private boolean mIsDragging;
+
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 
@@ -392,43 +390,105 @@ public class RangeBar extends View {
 		switch (event.getAction()) {
 
 		case MotionEvent.ACTION_DOWN:
-			mDiffX = 0;
-			mDiffY = 0;
-
-			mLastX = event.getX();
-			mLastY = event.getY();
-			onActionDown(event.getX(), event.getY());
-			return true;
-
-		case MotionEvent.ACTION_UP:
-		case MotionEvent.ACTION_CANCEL:
-			this.getParent().requestDisallowInterceptTouchEvent(false);
-			onActionUp(event.getX(), event.getY());
-			return true;
-
-		case MotionEvent.ACTION_MOVE:
-			onActionMove(event.getX(), event.getY());
-			this.getParent().requestDisallowInterceptTouchEvent(true);
-			final float curX = event.getX();
-			final float curY = event.getY();
-			mDiffX += Math.abs(curX - mLastX);
-			mDiffY += Math.abs(curY - mLastY);
-			mLastX = curX;
-			mLastY = curY;
-
-			if (mDiffX < mDiffY) {
-				//vertical touch
-				getParent().requestDisallowInterceptTouchEvent(false);
-				return false;
+			if (isInScrollingContainer()) {
+				mTouchDownX = event.getX();
+				mTouchDownY = event.getY();
 			}
 			else {
-				//horizontal touch (do nothing as it is needed for RangeBar)
+				boolean hitTarget = onActionDown(event.getX(), event.getY());
+				if (hitTarget) {
+					setPressed(true);
+					onStartTrackingTouch();
+					attemptClaimDrag();
+				}
 			}
-			return true;
+			break;
 
-		default:
-			return false;
+		case MotionEvent.ACTION_MOVE:
+			if (mIsDragging) {
+				onActionMove(event.getX(), event.getY());
+			}
+			else {
+				final float x = event.getX();
+				final float y = event.getY();
+				final int distance = (int) Math.sqrt(
+					(x - mTouchDownX) * (x - mTouchDownX)
+					+ (y - mTouchDownY) * (y - mTouchDownY));
+				if (distance > mScaledTouchSlop) {
+					boolean hitTarget = onActionDown(event.getX(), event.getY());
+					if (hitTarget) {
+						setPressed(true);
+						onStartTrackingTouch();
+						attemptClaimDrag();
+					}
+				}
+			}
+			break;
+
+		case MotionEvent.ACTION_UP:
+			if (mIsDragging) {
+				onActionUp(event.getX(), event.getY());
+				onStopTrackingTouch();
+				setPressed(false);
+			}
+			else {
+				// Touch up when we never crossed the touch slop threshold should
+				// be interpreted as a tap-seek to that location. But let's not do that now.
+			}
+			break;
+
+		case MotionEvent.ACTION_CANCEL:
+			if (mIsDragging) {
+				onStopTrackingTouch();
+				setPressed(false);
+			}
+			break;
+
 		}
+
+		return true;
+	}
+
+	// From AbsSeekBar.java //////////////////////////////////////////////////////////
+	// https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/widget/AbsSeekBar.java
+
+	/**
+	 * Tries to claim the user's drag motion, and requests disallowing any
+	 * ancestors from stealing events in the drag.
+	 */
+	private void attemptClaimDrag() {
+		ViewParent parent = getParent();
+		if (parent != null) {
+			parent.requestDisallowInterceptTouchEvent(true);
+		}
+	}
+
+	/**
+	 * This is called when the user has started touching this widget.
+	 */
+	void onStartTrackingTouch() {
+		mIsDragging = true;
+	}
+
+	/**
+	 * This is called when the user either releases his touch or the touch is
+	 * canceled.
+	 */
+	void onStopTrackingTouch() {
+		mIsDragging = false;
+	}
+
+	// From View.java
+	// https://github.com/android/platform_frameworks_base/blob/master/core/java/android/view/View.java#L10407
+	public boolean isInScrollingContainer() {
+		ViewParent p = getParent();
+		while (p != null && p instanceof ViewGroup) {
+			if (((ViewGroup) p).shouldDelayChildPressedState()) {
+				return true;
+			}
+			p = p.getParent();
+		}
+		return false;
 	}
 
 	// Public Methods //////////////////////////////////////////////////////////
@@ -468,7 +528,7 @@ public class RangeBar extends View {
 	}
 
 	public void setDrawTicks(boolean drawTicks) {
-		this.drawTicks = drawTicks;
+		this.mDrawTicks = drawTicks;
 	}
 
 	/**
@@ -1119,78 +1179,24 @@ public class RangeBar extends View {
 	 * @param x the x-coordinate of the down action
 	 * @param y the y-coordinate of the down action
 	 */
-	private void onActionDown(float x, float y) {
+	private boolean onActionDown(float x, float y) {
 		if (mIsRangeBar) {
 			if (!mRightThumb.isPressed() && mLeftThumb.isInTargetZone(x, y)) {
-
 				pressPin(mLeftThumb);
-
+				return true;
 			}
 			else if (!mLeftThumb.isPressed() && mRightThumb.isInTargetZone(x, y)) {
-
 				pressPin(mRightThumb);
+				return true;
 			}
 		}
 		else {
 			if (mRightThumb.isInTargetZone(x, y)) {
 				pressPin(mRightThumb);
+				return true;
 			}
 		}
-	}
-
-	/**
-	 * Handles a {@link android.view.MotionEvent#ACTION_UP} or
-	 * {@link android.view.MotionEvent#ACTION_CANCEL} event.
-	 *
-	 * @param x the x-coordinate of the up action
-	 * @param y the y-coordinate of the up action
-	 */
-	private void onActionUp(float x, float y) {
-		if (mIsRangeBar && mLeftThumb.isPressed()) {
-
-			releasePin(mLeftThumb);
-
-		}
-		else if (mRightThumb.isPressed()) {
-
-			releasePin(mRightThumb);
-
-		}
-		else {
-
-			float leftThumbXDistance = mIsRangeBar ? Math.abs(mLeftThumb.getX() - x) : 0;
-			float rightThumbXDistance = Math.abs(mRightThumb.getX() - x);
-
-			if (leftThumbXDistance < rightThumbXDistance) {
-				if (mIsRangeBar) {
-
-					mLeftThumb.setX(x); //TODO: this is wrong
-					//TODO this instead mLeftThumb.setPosition(something);
-					releasePin(mLeftThumb);
-				}
-			}
-			else {
-				mRightThumb.setX(x); //TODO: this is wrong
-				//TODO this instead mRightThumb.setPosition(something);
-				releasePin(mRightThumb);
-			}
-
-			// Get the updated nearest tick marks for each thumb.
-			final int newLeftIndex = mIsRangeBar ? mBar.getNearestTickIndex(mLeftThumb) : 0;
-			final int newRightIndex = mBar.getNearestTickIndex(mRightThumb);
-			// If either of the indices have changed, update and call the listener.
-			if (newLeftIndex != mLeftIndex || newRightIndex != mRightIndex) {
-
-				mLeftIndex = newLeftIndex;
-				mRightIndex = newRightIndex;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex),
-						getPinValue(mRightIndex));
-				}
-			}
-		}
+		return false;
 	}
 
 	/**
@@ -1212,12 +1218,11 @@ public class RangeBar extends View {
 		}
 
 		// If the thumbs have switched order, fix the references.
-		//TODO
-//        if (mIsRangeBar && mLeftThumb.getX() > mRightThumb.getX()) {
-//            final PinView temp = mLeftThumb;
-//            mLeftThumb = mRightThumb;
-//            mRightThumb = temp;
-//        }
+		if (mIsRangeBar && mBar.comparePointsOnBar(mLeftThumb.getPosition(), mRightThumb.getPosition()) > 0) {
+            final PinView temp = mLeftThumb;
+            mLeftThumb = mRightThumb;
+            mRightThumb = temp;
+        }
 
 		// Get the updated nearest tick marks for each thumb.
 		int newLeftIndex = mIsRangeBar ? mBar.getNearestTickIndex(mLeftThumb) : 0;
@@ -1239,6 +1244,61 @@ public class RangeBar extends View {
 					getPinValue(mRightIndex));
 			}
 		}
+	}
+
+	/**
+	 * Handles a {@link android.view.MotionEvent#ACTION_UP} event.
+	 *
+	 * @param x the x-coordinate of the up action
+	 * @param y the y-coordinate of the up action
+	 */
+	private void onActionUp(float x, float y) {
+		if (mIsRangeBar && mLeftThumb.isPressed()) {
+
+			releasePin(mLeftThumb);
+
+		}
+		else if (mRightThumb.isPressed()) {
+
+			releasePin(mRightThumb);
+
+		}
+		//TODO: is this ever called?
+//		else {
+//
+//			float leftThumbXDistance = mIsRangeBar ? Math.abs(mLeftThumb.getX() - x) : 0;
+//			float rightThumbXDistance = Math.abs(mRightThumb.getX() - x);
+//
+//			if (leftThumbXDistance < rightThumbXDistance) {
+//				if (mIsRangeBar) {
+//
+//					mLeftThumb.setX(x); //TODO: this is wrong
+//					//TODO this instead mLeftThumb.setPosition(something);
+//					releasePin(mLeftThumb);
+//				}
+//			}
+//			else {
+//				mRightThumb.setX(x); //TODO: this is wrong
+//				//TODO this instead mRightThumb.setPosition(something);
+//				releasePin(mRightThumb);
+//			}
+//
+//			// Get the updated nearest tick marks for each thumb.
+//			final int newLeftIndex = mIsRangeBar ? mBar.getNearestTickIndex(mLeftThumb) : 0;
+//			final int newRightIndex = mBar.getNearestTickIndex(mRightThumb);
+//			// If either of the indices have changed, update and call the listener.
+//			if (newLeftIndex != mLeftIndex || newRightIndex != mRightIndex) {
+//
+//				mLeftIndex = newLeftIndex;
+//				mRightIndex = newRightIndex;
+//
+//				if (mListener != null) {
+//					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
+//						getPinValue(mLeftIndex),
+//						getPinValue(mRightIndex));
+//				}
+//			}
+//		}
 	}
 
 	/**

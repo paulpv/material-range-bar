@@ -25,8 +25,8 @@ import android.graphics.RectF;
  */
 public class ArcBar extends Bar {
 
-	private static final float ARC_START = 120f;
-	private static final float ARC_SWEEP = 300f;
+	private static final float ARC_START = 150f;
+	private static final float ARC_SWEEP = 240f;
 
 	// Member Variables ////////////////////////////////////////////////////////
 
@@ -76,15 +76,15 @@ public class ArcBar extends Bar {
 	}
 
 	@Override
+	public int comparePointsOnBar(PointF point1, PointF point2) {
+		float angle1 = getNormalizedAngle(point1);
+		float angle2 = getNormalizedAngle(point2);
+		return Float.compare(angle1, angle2);
+	}
+
+	@Override
 	public void getNearestPointOnBar(PointF out, PointF point) {
 		float normalized = getNormalizedAngle(point);
-
-		if (normalized >= ARC_SWEEP / 2f + 180f) {
-			normalized = 0f;
-		}
-		else if (normalized > ARC_SWEEP) {
-			normalized = ARC_SWEEP;
-		}
 
 		out.set(ArcUtils.pointFromAngleDegrees(mCenter, mRadius, normalized + ARC_START));
 	}
@@ -134,6 +134,15 @@ public class ArcBar extends Bar {
 	 * @return
 	 */
 	private float getNormalizedAngle(PointF target) {
-		return (getAngle(target) - ARC_START + 720f) % 360f;
+		float normalized = (getAngle(target) - ARC_START + 720f) % 360f;
+
+		if (normalized >= ARC_SWEEP / 2f + 180f) {
+			normalized = 0f;
+		}
+		else if (normalized > ARC_SWEEP) {
+			normalized = ARC_SWEEP;
+		}
+
+		return normalized;
 	}
 }
