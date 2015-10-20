@@ -13,14 +13,10 @@
 
 package com.appyvet.rangebar;
 
-import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.graphics.RectF;
-import android.util.TypedValue;
 
 /**
  * This class represents the underlying gray bar in the RangeBar (without the
@@ -56,8 +52,8 @@ public class HorizontalBar extends Bar {
     }
 
     @Override
-    public void setTick(int count, int color, float size) {
-        super.setTick(count, color, size);
+    public void configureTicks(int count, int color, float size) {
+        super.configureTicks(count, color, size);
         mTickDistance = (mRightX - mLeftX) / (mTickCount - 1);
     }
 

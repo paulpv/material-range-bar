@@ -58,18 +58,18 @@ public abstract class Bar {
 		mTmpPoint = new PointF();
 	}
 
-	public void setBar(int color, float width) {
+	public void configureBar(int color, float width) {
 		mBarPaint.setColor(color);
 		mBarPaint.setStrokeWidth(width);
 	}
 
-	public void setTick(int count, int color, float size) {
+	public void configureTicks(int count, int color, float size) {
 		mTickCount = count;
 		mTickSize = size;
 		mTickPaint.setColor(color);
 	}
 
-	public void setConnectingLine(int color, float width) {
+	public void configureConnectingLine(int color, float width) {
 		mConnectingLinePaint.setColor(color);
 		mConnectingLinePaint.setStrokeWidth(width);
 	}

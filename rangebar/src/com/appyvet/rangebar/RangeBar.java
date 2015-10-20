@@ -334,9 +334,9 @@ public class RangeBar extends View {
 
 		//mBar = new HorizontalBar(size, padding);
 		mBar = new ArcBar(size, padding);
-		mBar.setBar(mBarColor, mBarWeight);
-		mBar.setTick(mTickCount, mTickColor, mTickSize);
-		mBar.setConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mBar.configureBar(mBarColor, mBarWeight);
+		mBar.configureTicks(mTickCount, mTickColor, mTickSize);
+		mBar.configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
 
 		createPins();
 
@@ -395,8 +395,8 @@ public class RangeBar extends View {
 				mTouchDownY = event.getY();
 			}
 			else {
-				boolean hitTarget = onActionDown(event.getX(), event.getY());
-				if (hitTarget) {
+				if (isInTargetZone(event.getX(), event.getY())) {
+					onActionDown(event.getX(), event.getY());
 					setPressed(true);
 					onStartTrackingTouch();
 					attemptClaimDrag();
@@ -415,11 +415,12 @@ public class RangeBar extends View {
 					(x - mTouchDownX) * (x - mTouchDownX)
 					+ (y - mTouchDownY) * (y - mTouchDownY));
 				if (distance > mScaledTouchSlop) {
-					boolean hitTarget = onActionDown(event.getX(), event.getY());
-					if (hitTarget) {
+					if (isInTargetZone(mTouchDownX, mTouchDownY)) {
+						onActionDown(mTouchDownX, mTouchDownY);
 						setPressed(true);
 						onStartTrackingTouch();
 						attemptClaimDrag();
+						onActionMove(event.getX(), event.getY());
 					}
 				}
 			}
@@ -566,7 +567,7 @@ public class RangeBar extends View {
 				}
 			}
 
-			mBar.setTick(mTickCount, mTickColor, mTickSize);
+			mBar.configureTicks(mTickCount, mTickColor, mTickSize);
 			createPins();
 		}
 		else {
@@ -607,7 +608,7 @@ public class RangeBar extends View {
 				}
 			}
 
-			mBar.setTick(mTickCount, mTickColor, mTickSize);
+			mBar.configureTicks(mTickCount, mTickColor, mTickSize);
 			createPins();
 		}
 		else {
@@ -648,7 +649,7 @@ public class RangeBar extends View {
 				}
 			}
 
-			mBar.setTick(mTickCount, mTickColor, mTickSize);
+			mBar.configureTicks(mTickCount, mTickColor, mTickSize);
 			createPins();
 		}
 		else {
@@ -664,7 +665,7 @@ public class RangeBar extends View {
 	 */
 	public void setTickHeight(float tickHeight) {
 		mTickSize = tickHeight;
-		mBar.setTick(mTickCount, mTickColor, mTickSize);
+		mBar.configureTicks(mTickCount, mTickColor, mTickSize);
 		invalidate();
 	}
 
@@ -676,7 +677,7 @@ public class RangeBar extends View {
 	 */
 	public void setBarWeight(float barWeight) {
 		mBarWeight = barWeight;
-		mBar.setBar(mBarColor, mBarWeight);
+		mBar.configureBar(mBarColor, mBarWeight);
 		invalidate();
 	}
 
@@ -687,7 +688,7 @@ public class RangeBar extends View {
 	 */
 	public void setBarColor(int barColor) {
 		mBarColor = barColor;
-		mBar.setBar(mBarColor, mBarWeight);
+		mBar.configureBar(mBarColor, mBarWeight);
 		invalidate();
 	}
 
@@ -741,7 +742,7 @@ public class RangeBar extends View {
 	 */
 	public void setTickColor(int tickColor) {
 		mTickColor = tickColor;
-		mBar.setTick(mTickCount, mTickColor, mTickSize);
+		mBar.configureTicks(mTickCount, mTickColor, mTickSize);
 		invalidate();
 	}
 
@@ -763,7 +764,7 @@ public class RangeBar extends View {
 	 */
 	public void setConnectingLineWeight(float connectingLineWeight) {
 		mConnectingLineWeight = connectingLineWeight;
-		mBar.setConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mBar.configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
 		invalidate();
 	}
 
@@ -775,7 +776,7 @@ public class RangeBar extends View {
 	 */
 	public void setConnectingLineColor(int connectingLineColor) {
 		mConnectingLineColor = connectingLineColor;
-		mBar.setConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mBar.configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
 		invalidate();
 	}
 
@@ -1016,9 +1017,9 @@ public class RangeBar extends View {
 			mTickColor = mActiveTickColor;
 		}
 
-		mBar.setBar(mBarColor, mBarWeight);
-		mBar.setTick(mTickCount, mTickColor, mTickSize);
-		mBar.setConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mBar.configureBar(mBarColor, mBarWeight);
+		mBar.configureTicks(mTickCount, mTickColor, mTickSize);
+		mBar.configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
 
 		createPins();
 		super.setEnabled(enabled);
@@ -1173,30 +1174,31 @@ public class RangeBar extends View {
 		return (tickCount > 1);
 	}
 
+	private boolean isInTargetZone(float x, float y) {
+		return mLeftThumb != null && mLeftThumb.isInTargetZone(x, y)
+			|| mRightThumb.isInTargetZone(x, y);
+	}
+
 	/**
 	 * Handles a {@link android.view.MotionEvent#ACTION_DOWN} event.
 	 *
 	 * @param x the x-coordinate of the down action
 	 * @param y the y-coordinate of the down action
 	 */
-	private boolean onActionDown(float x, float y) {
+	private void onActionDown(float x, float y) {
 		if (mIsRangeBar) {
 			if (!mRightThumb.isPressed() && mLeftThumb.isInTargetZone(x, y)) {
 				pressPin(mLeftThumb);
-				return true;
 			}
 			else if (!mLeftThumb.isPressed() && mRightThumb.isInTargetZone(x, y)) {
 				pressPin(mRightThumb);
-				return true;
 			}
 		}
 		else {
 			if (mRightThumb.isInTargetZone(x, y)) {
 				pressPin(mRightThumb);
-				return true;
 			}
 		}
-		return false;
 	}
 
 	/**
@@ -1394,14 +1396,12 @@ public class RangeBar extends View {
 	 * @param point the x-coordinate to move the thumb to
 	 */
 	private void movePin(PinView thumb, PointF point) {
-
 		if (thumb.getPosition().equals(point)) {
-			// Do nothing.
+			return;
 		}
-		else {
-			thumb.setPosition(point);
-			invalidate();
-		}
+
+		thumb.setPosition(point);
+		invalidate();
 	}
 
 	// Interfaces ///////////////////////////////////////////////////////////
