@@ -31,17 +31,13 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
-import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import com.dgmltn.ranger.PinView;
@@ -284,8 +280,6 @@ public abstract class AbsRangeBar extends View {
 			ta.recycle();
 		}
 
-		mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-
 		initBar();
 	}
 
@@ -451,9 +445,6 @@ public abstract class AbsRangeBar extends View {
 
 	// Touch Methods ////////////////////////////////////////////////////////////
 
-	private int mScaledTouchSlop;
-	private float mTouchDownX;
-	private float mTouchDownY;
 	private boolean mIsDragging;
 
 	@Override
@@ -467,39 +458,17 @@ public abstract class AbsRangeBar extends View {
 		switch (event.getAction()) {
 
 		case MotionEvent.ACTION_DOWN:
-			if (isInScrollingContainer()) {
-				mTouchDownX = event.getX();
-				mTouchDownY = event.getY();
-			}
-			else {
-				if (isInTargetZone(event.getX(), event.getY())) {
-					onActionDown(event.getX(), event.getY());
-					setPressed(true);
-					onStartTrackingTouch();
-					attemptClaimDrag();
-				}
+			if (isInTargetZone(event.getX(), event.getY())) {
+				onActionDown(event.getX(), event.getY());
+				setPressed(true);
+				onStartTrackingTouch();
+				attemptClaimDrag();
 			}
 			break;
 
 		case MotionEvent.ACTION_MOVE:
 			if (mIsDragging) {
 				onActionMove(event.getX(), event.getY());
-			}
-			else {
-				final float x = event.getX();
-				final float y = event.getY();
-				final int distance = (int) Math.sqrt(
-					(x - mTouchDownX) * (x - mTouchDownX)
-					+ (y - mTouchDownY) * (y - mTouchDownY));
-				if (distance > mScaledTouchSlop) {
-					if (isInTargetZone(mTouchDownX, mTouchDownY)) {
-						onActionDown(mTouchDownX, mTouchDownY);
-						setPressed(true);
-						onStartTrackingTouch();
-						attemptClaimDrag();
-						onActionMove(event.getX(), event.getY());
-					}
-				}
 			}
 			break;
 
@@ -556,19 +525,6 @@ public abstract class AbsRangeBar extends View {
 		mIsDragging = false;
 	}
 
-	// From View.java
-	// https://github.com/android/platform_frameworks_base/blob/master/core/java/android/view/View.java#L10407
-	public boolean isInScrollingContainer() {
-		ViewParent p = getParent();
-		while (p != null && p instanceof ViewGroup) {
-			if (((ViewGroup) p).shouldDelayChildPressedState()) {
-				return true;
-			}
-			p = p.getParent();
-		}
-		return false;
-	}
-
 	// Public Methods //////////////////////////////////////////////////////////
 
 	/**
@@ -594,6 +550,7 @@ public abstract class AbsRangeBar extends View {
 
 	/**
 	 * Enables or disables the drawing of tick marks.
+	 *
 	 * @param enable
 	 */
 	public void enableDrawTicks(boolean enable) {
@@ -1210,10 +1167,10 @@ public abstract class AbsRangeBar extends View {
 
 		// If the thumbs have switched order, fix the references.
 		if (mIsRangeBar && comparePointsOnBar(mLeftThumb.getPosition(), mRightThumb.getPosition()) > 0) {
-            final PinView temp = mLeftThumb;
-            mLeftThumb = mRightThumb;
-            mRightThumb = temp;
-        }
+			final PinView temp = mLeftThumb;
+			mLeftThumb = mRightThumb;
+			mRightThumb = temp;
+		}
 
 		// Get the updated nearest tick marks for each thumb.
 		int newLeftIndex = mIsRangeBar ? getNearestTickIndex(mLeftThumb) : 0;
