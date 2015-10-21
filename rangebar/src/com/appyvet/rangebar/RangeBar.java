@@ -39,6 +39,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
@@ -1109,6 +1110,8 @@ public class RangeBar extends View {
 		finally {
 			ta.recycle();
 		}
+
+		mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 	}
 
 	/**
@@ -1256,14 +1259,10 @@ public class RangeBar extends View {
 	 */
 	private void onActionUp(float x, float y) {
 		if (mIsRangeBar && mLeftThumb.isPressed()) {
-
 			releasePin(mLeftThumb);
-
 		}
 		else if (mRightThumb.isPressed()) {
-
 			releasePin(mRightThumb);
-
 		}
 		//TODO: is this ever called?
 //		else {
