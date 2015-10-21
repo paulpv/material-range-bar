@@ -408,7 +408,7 @@ public abstract class AbsRangeBar extends View {
 		// This is the initial point at which we know the size of the View.
 		resizeBar(w, h);
 
-		createPins();
+		initPins();
 
 		// Set the thumb indices.
 		final int newLeftIndex = mIsRangeBar ? getNearestTickIndex(mLeftThumb) : 0;
@@ -593,7 +593,7 @@ public abstract class AbsRangeBar extends View {
 			}
 
 			mTickPaint.setColor(mTickColor);
-			createPins();
+			initPins();
 		}
 		else {
 			Log.e(TAG, "tickCount less than 2; invalid tickCount.");
@@ -634,7 +634,7 @@ public abstract class AbsRangeBar extends View {
 			}
 
 			mTickPaint.setColor(mTickColor);
-			createPins();
+			initPins();
 		}
 		else {
 			Log.e(TAG, "tickCount less than 2; invalid tickCount.");
@@ -675,7 +675,7 @@ public abstract class AbsRangeBar extends View {
 			}
 
 			mTickPaint.setColor(mTickColor);
-			createPins();
+			initPins();
 		}
 		else {
 			Log.e(TAG, "tickCount less than 2; invalid tickCount.");
@@ -723,7 +723,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setPinColor(int pinColor) {
 		mPinColor = pinColor;
-		createPins();
+		initPins();
 	}
 
 	/**
@@ -733,7 +733,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setPinTextColor(int textColor) {
 		mTextColor = textColor;
-		createPins();
+		initPins();
 	}
 
 	/**
@@ -777,7 +777,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setSelectorColor(int selectorColor) {
 		mCircleColor = selectorColor;
-		createPins();
+		initPins();
 	}
 
 	/**
@@ -812,7 +812,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setPinRadius(float pinRadius) {
 		mExpandedPinRadius = pinRadius;
-		createPins();
+		initPins();
 	}
 
 	/**
@@ -869,7 +869,7 @@ public abstract class AbsRangeBar extends View {
 			}
 			mLeftIndex = leftPinIndex;
 			mRightIndex = rightPinIndex;
-			createPins();
+			initPins();
 
 			if (mListener != null) {
 				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
@@ -907,7 +907,7 @@ public abstract class AbsRangeBar extends View {
 				mFirstSetTickCount = false;
 			}
 			mRightIndex = pinIndex;
-			createPins();
+			initPins();
 
 			if (mListener != null) {
 				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
@@ -944,7 +944,7 @@ public abstract class AbsRangeBar extends View {
 
 			mLeftIndex = (int) ((leftPinValue - mTickStart) / mTickInterval);
 			mRightIndex = (int) ((rightPinValue - mTickStart) / mTickInterval);
-			createPins();
+			initPins();
 
 			if (mListener != null) {
 				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
@@ -979,7 +979,7 @@ public abstract class AbsRangeBar extends View {
 				mFirstSetTickCount = false;
 			}
 			mRightIndex = (int) ((pinValue - mTickStart) / mTickInterval);
-			createPins();
+			initPins();
 
 			if (mListener != null) {
 				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
@@ -1047,7 +1047,7 @@ public abstract class AbsRangeBar extends View {
 		mConnectingLinePaint.setColor(mConnectingLineColor);
 		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 
-		createPins();
+		initPins();
 		super.setEnabled(enabled);
 	}
 
@@ -1060,14 +1060,16 @@ public abstract class AbsRangeBar extends View {
 	/**
 	 * Creates two new Pins.
 	 */
-	private void createPins() {
+	private void initPins() {
 		Context ctx = getContext();
 
 		if (mIsRangeBar) {
 			PointF leftPoint = new PointF();
 			getPointOfTick(leftPoint, 0);
-			mLeftThumb = new PinView(ctx);
-			mLeftThumb.init(ctx, leftPoint,
+			if (mLeftThumb == null) {
+				mLeftThumb = new PinView(ctx);
+			}
+			mLeftThumb.init(leftPoint,
 				0, mPinColor, mTextColor,
 				mCircleSize, mCircleColor,
 				mMinPinFont, mMaxPinFont);
@@ -1075,8 +1077,10 @@ public abstract class AbsRangeBar extends View {
 		}
 		PointF rightPoint = new PointF();
 		getPointOfTick(rightPoint, mTickCount - 1);
-		mRightThumb = new PinView(ctx);
-		mRightThumb.init(ctx, rightPoint,
+		if (mRightThumb == null) {
+			mRightThumb = new PinView(ctx);
+		}
+		mRightThumb.init(rightPoint,
 			0, mPinColor, mTextColor,
 			mCircleSize, mCircleColor,
 			mMinPinFont, mMaxPinFont);
