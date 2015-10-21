@@ -1,6 +1,6 @@
 <resources>
 
-    <declare-styleable name="RangeBar">
+    <declare-styleable name="AbsRangeBar">
         <attr name="tickStart" format="float" />
         <attr name="tickEnd" format="float" />
         <attr name="tickInterval" format="float" />

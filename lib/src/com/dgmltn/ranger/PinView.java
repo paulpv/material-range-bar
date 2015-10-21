@@ -26,6 +26,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.TypedValue;
 import android.view.View;
 
+import com.dgmltn.ranger.internal.AbsRangeBar;
 import com.dgmltn.ranger.internal.IRangeBarFormatter;
 
 /**
@@ -85,9 +86,9 @@ public class PinView extends View {
 
     private IRangeBarFormatter formatter;
 
-    private float mMinPinFont = RangeBar.DEFAULT_MIN_PIN_FONT_SP;
+    private float mMinPinFont = AbsRangeBar.DEFAULT_MIN_PIN_FONT_SP;
 
-    private float mMaxPinFont = RangeBar.DEFAULT_MAX_PIN_FONT_SP;
+    private float mMaxPinFont = AbsRangeBar.DEFAULT_MAX_PIN_FONT_SP;
 
     // Constructors ////////////////////////////////////////////////////////////
 

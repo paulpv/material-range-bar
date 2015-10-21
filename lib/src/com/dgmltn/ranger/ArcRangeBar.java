@@ -11,24 +11,25 @@
  * governing permissions and limitations under the License. 
  */
 
-package com.dgmltn.ranger.internal;
+package com.dgmltn.ranger;
 
+import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.AttributeSet;
+
+import com.dgmltn.ranger.internal.AbsRangeBar;
+import com.dgmltn.ranger.internal.ArcUtils;
 
 /**
  * This class represents the underlying gray bar in the RangeBar (without the
  * thumbs).
  */
-public class ArcBar extends Bar {
+public class ArcRangeBar extends AbsRangeBar {
 
 	private static final float ARC_START = 150f;
 	private static final float ARC_SWEEP = 240f;
-
-	// Member Variables ////////////////////////////////////////////////////////
 
 	private PointF mCenter = new PointF();
 	private float mRadius = 1f;
@@ -36,16 +37,25 @@ public class ArcBar extends Bar {
 
 	// Constructor /////////////////////////////////////////////////////////////
 
-	/**
-	 * Bar constructor
-	 *
-	 * @param size    The measured size of this view
-	 * @param padding The 4 padding values of this view
-	 */
-	public ArcBar(Point size, Rect padding) {
-		super();
-		float w = size.x - padding.left - padding.right;
-		float h = size.y - padding.top - padding.bottom;
+	public ArcRangeBar(Context context) {
+		super(context);
+	}
+
+	public ArcRangeBar(Context context, AttributeSet attrs) {
+		super(context, attrs);
+	}
+
+	public ArcRangeBar(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+	}
+
+	// Implementation /////////////////////////////////////////////////////////////
+
+	@Override
+	protected void createBar() {
+		super.createBar();
+		float w = getWidth() - getPaddingLeft() - getPaddingRight();
+		float h = getHeight() - getPaddingTop() - getPaddingBottom();
 
 		calculateBounds();
 
@@ -54,8 +64,8 @@ public class ArcBar extends Bar {
 
 		calculateBounds();
 
-		float dx = -mBounds.left + w / 2 - mBounds.width() / 2 + padding.left;
-		float dy = -mBounds.top + h / 2 - mBounds.height() / 2 + padding.top;
+		float dx = -mBounds.left + w / 2 - mBounds.width() / 2 + getPaddingLeft();
+		float dy = -mBounds.top + h / 2 - mBounds.height() / 2 + getPaddingTop();
 		mCenter.offset(dx, dy);
 		mBounds.offset(dx, dy);
 	}
@@ -105,7 +115,7 @@ public class ArcBar extends Bar {
 	}
 
 	@Override
-	public void draw(Canvas canvas) {
+	public void drawBar(Canvas canvas) {
 		ArcUtils.drawArc(canvas, mCenter, mRadius, ARC_START, ARC_SWEEP, mBarPaint);
 	}
 
@@ -116,6 +126,8 @@ public class ArcBar extends Bar {
 		float sweep = (angle2 - angle1) % 360f;
 		ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mConnectingLinePaint);
 	}
+
+	// Private members /////////////////////////////////////////////////////////////
 
 	/**
 	 * Returns the angle between 0 and the point.

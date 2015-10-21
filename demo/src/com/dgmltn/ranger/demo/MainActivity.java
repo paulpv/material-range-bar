@@ -1,7 +1,7 @@
 
 package com.dgmltn.ranger.demo;
 
-import com.dgmltn.ranger.RangeBar;
+import com.dgmltn.ranger.internal.AbsRangeBar;
 import com.dgmltn.ranger.demo.colorpicker.ColorPickerDialog;
 import com.dgmltn.ranger.demo.colorpicker.Utils;
 
@@ -34,7 +34,7 @@ public class MainActivity extends Activity implements
     private int mTickColor;
 
     // Initializes the RangeBar in the application
-    private RangeBar rangebar;
+    private AbsRangeBar rangebar;
 
     private int mSelectorColor;
 
@@ -82,7 +82,7 @@ public class MainActivity extends Activity implements
 //        pinColor.setTypeface(font, Typeface.BOLD);
 
         // Gets the RangeBar
-        rangebar = (RangeBar) findViewById(R.id.rangebar1);
+        rangebar = (AbsRangeBar) findViewById(R.id.rangebar1);
 
         rangeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,9 +104,9 @@ public class MainActivity extends Activity implements
         final EditText rightIndexValue = (EditText) findViewById(R.id.rightIndexValue);
 
         // Sets the display values of the indices
-        rangebar.setOnRangeBarChangeListener(new RangeBar.OnRangeBarChangeListener() {
+        rangebar.setOnRangeBarChangeListener(new AbsRangeBar.OnRangeBarChangeListener() {
             @Override
-            public void onRangeChangeListener(RangeBar rangeBar, int leftPinIndex,
+            public void onRangeChangeListener(AbsRangeBar rangeBar, int leftPinIndex,
                     int rightPinIndex,
                     String leftPinValue, String rightPinValue) {
                 leftIndexValue.setText("" + leftPinIndex);
