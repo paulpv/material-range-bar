@@ -173,8 +173,6 @@ public abstract class AbsRangeBar extends View {
 
 	private int mActiveCircleColor;
 
-	private IRangeBarFormatter mFormatter;
-
 	private boolean mDrawTicks = true;
 
 	private boolean mArePinsTemporary = true;
@@ -287,6 +285,8 @@ public abstract class AbsRangeBar extends View {
 		}
 
 		mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+
+		initBar();
 	}
 
 	// View Methods ////////////////////////////////////////////////////////////
@@ -412,15 +412,7 @@ public abstract class AbsRangeBar extends View {
 		super.onSizeChanged(w, h, oldw, oldh);
 
 		// This is the initial point at which we know the size of the View.
-
-		// Create the underlying bar.
-		Rect padding = new Rect(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
-		Point size = new Point(getWidth(), getHeight());
-
-		createBar();
-		configureBar(mBarColor, mBarWeight);
-		configureTicks(mTickCount, mTickColor, mTickSize);
-		configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		resizeBar(w, h);
 
 		createPins();
 
@@ -440,7 +432,6 @@ public abstract class AbsRangeBar extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-
 		super.onDraw(canvas);
 
 		drawBar(canvas);
@@ -457,6 +448,8 @@ public abstract class AbsRangeBar extends View {
 		mRightThumb.draw(canvas);
 
 	}
+
+	// Touch Methods ////////////////////////////////////////////////////////////
 
 	private int mScaledTouchSlop;
 	private float mTouchDownX;
@@ -599,21 +592,12 @@ public abstract class AbsRangeBar extends View {
 		this.mPinTextListener = mPinTextListener;
 	}
 
-
-	public void setFormatter(IRangeBarFormatter formatter) {
-		if (mLeftThumb != null) {
-			mLeftThumb.setFormatter(formatter);
-		}
-
-		if (mRightThumb != null) {
-			mRightThumb.setFormatter(formatter);
-		}
-
-		mFormatter = formatter;
-	}
-
-	public void setDrawTicks(boolean drawTicks) {
-		this.mDrawTicks = drawTicks;
+	/**
+	 * Enables or disables the drawing of tick marks.
+	 * @param enable
+	 */
+	public void enableDrawTicks(boolean enable) {
+		this.mDrawTicks = enable;
 	}
 
 	/**
@@ -651,7 +635,7 @@ public abstract class AbsRangeBar extends View {
 				}
 			}
 
-			configureTicks(mTickCount, mTickColor, mTickSize);
+			mTickPaint.setColor(mTickColor);
 			createPins();
 		}
 		else {
@@ -692,7 +676,7 @@ public abstract class AbsRangeBar extends View {
 				}
 			}
 
-			configureTicks(mTickCount, mTickColor, mTickSize);
+			mTickPaint.setColor(mTickColor);
 			createPins();
 		}
 		else {
@@ -733,7 +717,7 @@ public abstract class AbsRangeBar extends View {
 				}
 			}
 
-			configureTicks(mTickCount, mTickColor, mTickSize);
+			mTickPaint.setColor(mTickColor);
 			createPins();
 		}
 		else {
@@ -749,7 +733,6 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setTickHeight(float tickHeight) {
 		mTickSize = tickHeight;
-		configureTicks(mTickCount, mTickColor, mTickSize);
 		invalidate();
 	}
 
@@ -761,7 +744,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setBarWeight(float barWeight) {
 		mBarWeight = barWeight;
-		configureBar(mBarColor, mBarWeight);
+		mBarPaint.setStrokeWidth(mBarWeight);
 		invalidate();
 	}
 
@@ -772,7 +755,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setBarColor(int barColor) {
 		mBarColor = barColor;
-		configureBar(mBarColor, mBarWeight);
+		mBarPaint.setColor(mBarColor);
 		invalidate();
 	}
 
@@ -826,7 +809,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setTickColor(int tickColor) {
 		mTickColor = tickColor;
-		configureTicks(mTickCount, mTickColor, mTickSize);
+		mTickPaint.setColor(mTickColor);
 		invalidate();
 	}
 
@@ -848,7 +831,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setConnectingLineWeight(float connectingLineWeight) {
 		mConnectingLineWeight = connectingLineWeight;
-		configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 		invalidate();
 	}
 
@@ -860,7 +843,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setConnectingLineColor(int connectingLineColor) {
 		mConnectingLineColor = connectingLineColor;
-		configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mConnectingLinePaint.setColor(mConnectingLineColor);
 		invalidate();
 	}
 
@@ -1101,9 +1084,11 @@ public abstract class AbsRangeBar extends View {
 			mTickColor = mActiveTickColor;
 		}
 
-		configureBar(mBarColor, mBarWeight);
-		configureTicks(mTickCount, mTickColor, mTickSize);
-		configureConnectingLine(mConnectingLineColor, mConnectingLineWeight);
+		mBarPaint.setColor(mBarColor);
+		mBarPaint.setStrokeWidth(mBarWeight);
+		mTickPaint.setColor(mTickColor);
+		mConnectingLinePaint.setColor(mConnectingLineColor);
+		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 
 		createPins();
 		super.setEnabled(enabled);
@@ -1412,36 +1397,31 @@ public abstract class AbsRangeBar extends View {
 
 	PointF mTmpPoint;
 
-	protected void createBar() {
+	protected void initBar() {
 		// Initialize the paint.
 		mBarPaint = new Paint();
 		mBarPaint.setAntiAlias(true);
 		mBarPaint.setStyle(Paint.Style.STROKE);
+		mBarPaint.setColor(mBarColor);
+		mBarPaint.setStrokeWidth(mBarWeight);
 
 		mTickPaint = new Paint();
 		mTickPaint.setAntiAlias(true);
+		mTickPaint.setColor(mTickColor);
 
 		// Initialize the paint, set values
 		mConnectingLinePaint = new Paint();
 		mConnectingLinePaint.setStrokeCap(Paint.Cap.ROUND);
 		mConnectingLinePaint.setStyle(Paint.Style.STROKE);
 		mConnectingLinePaint.setAntiAlias(true);
+		mConnectingLinePaint.setColor(mConnectingLineColor);
+		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 
 		mTmpPoint = new PointF();
 	}
 
-	protected void configureBar(int color, float width) {
-		mBarPaint.setColor(color);
-		mBarPaint.setStrokeWidth(width);
-	}
-
-	protected void configureTicks(int count, int color, float size) {
-		mTickPaint.setColor(color);
-	}
-
-	protected void configureConnectingLine(int color, float width) {
-		mConnectingLinePaint.setColor(color);
-		mConnectingLinePaint.setStrokeWidth(width);
+	protected void resizeBar(int w, int h) {
+		// Nothing to do here
 	}
 
 	/**

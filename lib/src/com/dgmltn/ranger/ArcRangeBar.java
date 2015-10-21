@@ -52,20 +52,21 @@ public class ArcRangeBar extends AbsRangeBar {
 	// Implementation /////////////////////////////////////////////////////////////
 
 	@Override
-	protected void createBar() {
-		super.createBar();
-		float w = getWidth() - getPaddingLeft() - getPaddingRight();
-		float h = getHeight() - getPaddingTop() - getPaddingBottom();
+	protected void resizeBar(int w, int h) {
+		super.resizeBar(w, h);
+
+		float pw = w - getPaddingLeft() - getPaddingRight();
+		float ph = h - getPaddingTop() - getPaddingBottom();
 
 		calculateBounds();
 
-		float scale = Math.min(w / mBounds.width(), h / mBounds.height());
+		float scale = Math.min(pw / mBounds.width(), ph / mBounds.height());
 		mRadius *= scale;
 
 		calculateBounds();
 
-		float dx = -mBounds.left + w / 2 - mBounds.width() / 2 + getPaddingLeft();
-		float dy = -mBounds.top + h / 2 - mBounds.height() / 2 + getPaddingTop();
+		float dx = -mBounds.left + pw / 2 - mBounds.width() / 2 + getPaddingLeft();
+		float dy = -mBounds.top + ph / 2 - mBounds.height() / 2 + getPaddingTop();
 		mCenter.offset(dx, dy);
 		mBounds.offset(dx, dy);
 	}

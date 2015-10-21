@@ -12,8 +12,6 @@ import com.dgmltn.ranger.internal.AbsRangeBar;
  */
 public class HorizontalRangeBar extends AbsRangeBar {
 
-	private float mTickDistance;
-
 	// Endpoints of the horizontal bar
 	private float mLeftX;
 	private float mRightX;
@@ -38,18 +36,12 @@ public class HorizontalRangeBar extends AbsRangeBar {
 	// Implementation /////////////////////////////////////////////////////////////
 
 	@Override
-	protected void createBar() {
-		super.createBar();
+	protected void resizeBar(int w, int h) {
+		super.resizeBar(w, h);
 
 		mLeftX = getPaddingLeft();
 		mRightX = getWidth() - getPaddingRight();
 		mY = getHeight() - getPaddingBottom();
-	}
-
-	@Override
-	public void configureTicks(int count, int color, float size) {
-		super.configureTicks(count, color, size);
-		mTickDistance = (mRightX - mLeftX) / (mTickCount - 1);
 	}
 
 	@Override
@@ -69,13 +61,14 @@ public class HorizontalRangeBar extends AbsRangeBar {
 			out.set(mRightX, mY);
 		}
 		else {
-			out.set(index * mTickDistance + mLeftX, mY);
+			out.set(index * getTickDistance() + mLeftX, mY);
 		}
 	}
 
 	@Override
 	public int getNearestTickIndex(PointF point) {
-		return (int) ((point.x - mLeftX + mTickDistance / 2f) / mTickDistance);
+		float d = getTickDistance();
+		return (int) ((point.x - mLeftX + d / 2f) / d);
 	}
 
 	@Override
@@ -86,5 +79,9 @@ public class HorizontalRangeBar extends AbsRangeBar {
 	@Override
 	public void drawConnectingLine(Canvas canvas, PointF left, PointF right) {
 		canvas.drawLine(left.x, mY, right.x, mY, mConnectingLinePaint);
+	}
+
+	private float getTickDistance() {
+		return (mRightX - mLeftX) / (mTickCount - 1);
 	}
 }
