@@ -6,7 +6,7 @@
     <string name="title">MaterialRangeBar</string>
     <string name="tickStart">Tick Start = 5</string>
     <string name="tickEnd">Tick End = 10</string>
-    <string name="tickInterval">Tick Interval = 1</string>
+    <string name="tickCount">Tick Count = 5</string>
     <string name="tickHeight">Tick Height = 24</string>
     <string name="barWeight">Bar Weight = 2</string>
     <string name="barColor">Bar Color = #CCCCCC</string>

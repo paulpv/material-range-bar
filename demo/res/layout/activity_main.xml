@@ -21,21 +21,6 @@
         android:textColor="@color/white"
         android:textSize="40sp" />
 
-    <com.dgmltn.ranger.HorizontalRangeBar
-        android:id="@+id/rangebar1"
-        android:layout_width="match_parent"
-        android:layout_height="192dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:paddingBottom="8dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="32dp"
-        app:pinMaxFont="10sp"
-        app:tickEnd="10"
-        app:tickInterval="1"
-        app:tickStart="5" />
-
     <include
         layout="@layout/divider"
         android:layout_width="wrap_content"
@@ -52,6 +37,21 @@
             android:orientation="vertical"
             android:paddingLeft="16dp"
             android:paddingRight="16dp">
+
+            <com.dgmltn.ranger.ArcRangeBar
+                android:id="@+id/rangebar1"
+                android:layout_width="match_parent"
+                android:layout_height="192dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:paddingBottom="8dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="32dp"
+                app:pinMaxFont="10sp"
+                app:tickEnd="10"
+                app:tickCount="6"
+                app:tickStart="5" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -231,12 +231,12 @@
                 android:progress="10" />
 
             <TextView
-                android:id="@+id/tickInterval"
+                android:id="@+id/tickCount"
                 style="@style/RoboTheme"
-                android:text="@string/tickInterval" />
+                android:text="@string/tickCount" />
 
             <SeekBar
-                android:id="@+id/tickIntervalSeek"
+                android:id="@+id/tickCountSeek"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="20"

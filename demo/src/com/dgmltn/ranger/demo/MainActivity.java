@@ -76,11 +76,6 @@ public class MainActivity extends Activity implements
         final TextView rangeButton = (TextView) findViewById(R.id.enableRange);
         final TextView disabledButton = (TextView) findViewById(R.id.disable);
 
-        //Sets the buttons to bold.
-//        barColor.setTypeface(font, Typeface.BOLD);
-//        connectingLineColor.setTypeface(font, Typeface.BOLD);
-//        pinColor.setTypeface(font, Typeface.BOLD);
-
         // Gets the RangeBar
         rangebar = (AbsRangeBar) findViewById(R.id.rangebar1);
 
@@ -106,13 +101,10 @@ public class MainActivity extends Activity implements
         // Sets the display values of the indices
         rangebar.setOnRangeBarChangeListener(new AbsRangeBar.OnRangeBarChangeListener() {
             @Override
-            public void onRangeChangeListener(AbsRangeBar rangeBar, int leftPinIndex,
-                    int rightPinIndex,
-                    String leftPinValue, String rightPinValue) {
-                leftIndexValue.setText("" + leftPinIndex);
-                rightIndexValue.setText("" + rightPinIndex);
+            public void onRangeChangeListener(AbsRangeBar rangeBar, int[] indices) {
+                leftIndexValue.setText(rangeBar.getPinLabel(indices[0]));
+                rightIndexValue.setText(rangeBar.getPinLabel(indices[1]));
             }
-
         });
 
         // Sets the indices themselves upon input from the user
@@ -127,9 +119,9 @@ public class MainActivity extends Activity implements
                 // a dialog warning the user
                 try {
                     if (!leftIndex.isEmpty() && !rightIndex.isEmpty()) {
-                        int leftIntIndex = Integer.parseInt(leftIndex);
-                        int rightIntIndex = Integer.parseInt(rightIndex);
-                        rangebar.setRangePinsByIndices(leftIntIndex, rightIntIndex);
+                        rangebar.setPinIndices(new int[] {
+                            Integer.parseInt(leftIndex),
+                            Integer.parseInt(rightIndex)});
                     }
                 } catch (IllegalArgumentException e) {
                 }
@@ -148,9 +140,7 @@ public class MainActivity extends Activity implements
                 // a dialog warning the user
                 try {
                     if (!leftValue.isEmpty() && !rightValue.isEmpty()) {
-                        float leftIntIndex = Float.parseFloat(leftValue);
-                        float rightIntIndex = Float.parseFloat(rightValue);
-                        rangebar.setRangePinsByValue(leftIntIndex, rightIntIndex);
+                        rangebar.setPinValues(Float.parseFloat(leftValue), Float.parseFloat(rightValue));
                     }
                 } catch (IllegalArgumentException e) {
                 }
@@ -166,7 +156,7 @@ public class MainActivity extends Activity implements
             @Override
             public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
                 try {
-                    rangebar.setTickStart(progress);
+                    rangebar.setTicks(progress, rangebar.getTickEnd(), rangebar.getTickCount());
                 } catch (IllegalArgumentException e) {
                 }
                 tickStart.setText("tickStart = " + progress);
@@ -188,7 +178,7 @@ public class MainActivity extends Activity implements
             @Override
             public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
                 try {
-                    rangebar.setTickEnd(progress);
+                    rangebar.setTicks(rangebar.getTickStart(), progress, rangebar.getTickCount());
                 } catch (IllegalArgumentException e) {
                 }
                 tickEnd.setText("tickEnd = " + progress);
@@ -204,16 +194,16 @@ public class MainActivity extends Activity implements
         });
 
         // Sets tickInterval
-        final TextView tickInterval = (TextView) findViewById(R.id.tickInterval);
-        SeekBar tickIntervalSeek = (SeekBar) findViewById(R.id.tickIntervalSeek);
-        tickIntervalSeek.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+        final TextView tickCount = (TextView) findViewById(R.id.tickCount);
+        SeekBar tickCountSeek = (SeekBar) findViewById(R.id.tickCountSeek);
+        tickCountSeek.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
                 try {
-                    rangebar.setTickInterval(progress / 10.0f);
+                    rangebar.setTicks(rangebar.getTickStart(), rangebar.getTickEnd(), progress + 2);
                 } catch (IllegalArgumentException e) {
                 }
-                tickInterval.setText("tickInterval = " + progress / 10.0f);
+                tickCount.setText("Tick Count = " + (progress + 2));
             }
 
             @Override
