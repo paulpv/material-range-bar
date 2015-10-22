@@ -104,14 +104,14 @@ public class ArcRangeBar extends AbsRangeBar {
 	public int getNearestTickIndex(PointF point) {
 		float normalized = getNormalizedAngle(point);
 
-		float mTickDegrees = ARC_SWEEP / (mTickCount - 1f);
+		float mTickDegrees = ARC_SWEEP / (getTickCount() - 1f);
 
 		return (int) (normalized / mTickDegrees + 0.5f);
 	}
 
 	@Override
 	public void getPointOfTick(PointF out, int index) {
-		float mTickDegrees = ARC_SWEEP / (mTickCount - 1f);
+		float mTickDegrees = ARC_SWEEP / (getTickCount() - 1f);
 		out.set(ArcUtils.pointFromAngleDegrees(mCenter, mRadius, ARC_START + mTickDegrees * index));
 	}
 

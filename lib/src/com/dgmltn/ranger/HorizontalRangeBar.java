@@ -56,7 +56,7 @@ public class HorizontalRangeBar extends AbsRangeBar {
 
 	@Override
 	public void getPointOfTick(PointF out, int index) {
-		if (index == mTickCount - 1) {
+		if (index == getTickCount() - 1) {
 			// Avoid any rounding discrepancies
 			out.set(mRightX, mY);
 		}
@@ -82,6 +82,6 @@ public class HorizontalRangeBar extends AbsRangeBar {
 	}
 
 	private float getTickDistance() {
-		return (mRightX - mLeftX) / (mTickCount - 1);
+		return (mRightX - mLeftX) / (getTickCount() - 1);
 	}
 }

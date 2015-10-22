@@ -25,6 +25,9 @@ package com.dgmltn.ranger.internal;
  * governing permissions and limitations under the License.
  */
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -35,7 +38,6 @@ import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
@@ -63,119 +65,75 @@ public abstract class AbsRangeBar extends View {
 	private static final String TAG = "RangeBar";
 
 	// Default values for variables
-	private static final float DEFAULT_TICK_START = 0;
-
-	private static final float DEFAULT_TICK_END = 5;
-
-	private static final float DEFAULT_TICK_INTERVAL = 1;
-
-	private static final float DEFAULT_TICK_HEIGHT_DP = 1;
-
+	private static final float DEFAULT_TICK_START = 0f;
+	private static final float DEFAULT_TICK_END = 5f;
+	private static final int DEFAULT_TICK_COUNT = 6;
+	private static final float DEFAULT_TICK_SIZE_DP = 1;
 	private static final float DEFAULT_PIN_PADDING_DP = 16;
-
 	public static final float DEFAULT_MIN_PIN_FONT_SP = 8;
-
 	public static final float DEFAULT_MAX_PIN_FONT_SP = 24;
-
-	private static final float DEFAULT_BAR_WEIGHT_PX = 2;
-
+	private static final float DEFAULT_BAR_WEIGHT_DP = 1;
 	private static final int DEFAULT_BAR_COLOR = Color.LTGRAY;
-
 	private static final int DEFAULT_TEXT_COLOR = Color.WHITE;
-
 	private static final int DEFAULT_TICK_COLOR = Color.BLACK;
-
-	// Corresponds to material indigo 500.
-	private static final int DEFAULT_PIN_COLOR = 0xff3f51b5;
-
-	private static final float DEFAULT_CONNECTING_LINE_WEIGHT_PX = 4;
-
-	// Corresponds to material indigo 500.
-	private static final int DEFAULT_CONNECTING_LINE_COLOR = 0xff3f51b5;
-
+	private static final int INDIGO_500 = 0xff3f51b5;
+	private static final int DEFAULT_PIN_COLOR = INDIGO_500;
+	private static final float DEFAULT_CONNECTING_LINE_WEIGHT_DP = 2;
+	private static final int DEFAULT_CONNECTING_LINE_COLOR = INDIGO_500;
 	private static final float DEFAULT_EXPANDED_PIN_RADIUS_DP = 12;
-
 	private static final float DEFAULT_CIRCLE_SIZE_DP = 5;
 
-	private static final float DEFAULT_BAR_PADDING_BOTTOM_DP = 24;
+	// "natural" dimensions of this View for WRAP_CONTENT
+	private static final int DEFAULT_WIDTH = 500;
+	private static final int DEFAULT_HEIGHT = 150;
 
 	// Instance variables for all of the customizable attributes
 
-	private float mTickSize = DEFAULT_TICK_HEIGHT_DP;
+	// Bar
+	private float mBarWeight;
+	private int mBarColor;
 
-	private float mTickStart = DEFAULT_TICK_START;
-
-	private float mTickEnd = DEFAULT_TICK_END;
-
-	private float mTickInterval = DEFAULT_TICK_INTERVAL;
-
-	private float mBarWeight = DEFAULT_BAR_WEIGHT_PX;
-
-	private int mBarColor = DEFAULT_BAR_COLOR;
-
-	private int mPinColor = DEFAULT_PIN_COLOR;
-
-	private int mTextColor = DEFAULT_TEXT_COLOR;
-
-	private float mConnectingLineWeight = DEFAULT_CONNECTING_LINE_WEIGHT_PX;
-
-	private int mConnectingLineColor = DEFAULT_CONNECTING_LINE_COLOR;
-
-	private float mThumbRadiusDP = DEFAULT_EXPANDED_PIN_RADIUS_DP;
-
-	private int mTickColor = DEFAULT_TICK_COLOR;
-
-	private float mExpandedPinRadius = DEFAULT_EXPANDED_PIN_RADIUS_DP;
-
-	private int mCircleColor = DEFAULT_CONNECTING_LINE_COLOR;
-
-	private float mCircleSize = DEFAULT_CIRCLE_SIZE_DP;
-
-	private float mMinPinFont = DEFAULT_MIN_PIN_FONT_SP;
-
-	private float mMaxPinFont = DEFAULT_MAX_PIN_FONT_SP;
-
-	// setTickCount only resets indices before a thumb has been pressed or a
-	// setThumbIndices() is called, to correspond with intended usage
-	private boolean mFirstSetTickCount = true;
-
-	private int mDefaultWidth = 500;
-
-	private int mDefaultHeight = 150;
-
-	protected int mTickCount = (int) ((mTickEnd - mTickStart) / mTickInterval) + 1;
-
-	private PinView mLeftThumb;
-
-	private PinView mRightThumb;
-
-	private OnRangeBarChangeListener mListener;
-
-	private OnRangeBarTextListener mPinTextListener;
-
-	private int mLeftIndex;
-
-	private int mRightIndex;
-
-	private boolean mIsRangeBar = true;
-
-	private float mPinPadding = DEFAULT_PIN_PADDING_DP;
-
-	private int mActiveConnectingLineColor;
-
-	private int mActiveBarColor;
-
-	private int mActiveTickColor;
-
-	private int mActiveCircleColor;
-
+	// Ticks
+	private float mTickSize;
+	private int mTickColor;
+	private float mTickStart;
+	private float mTickEnd;
+	private int mTickCount;
 	private boolean mDrawTicks = true;
 
+	// Selectors
+	private int mSelectorColor;
+	private float mSelectorSize;
+
+	// Pins
+	private PinView[] mPinView;
+	private int[] mPinIndex;
+	private int mPinColor;
+	private float mPinRadius;
+	private float mExpandedPinRadius;
+	private float mMinPinFont;
+	private float mMaxPinFont;
+	private float mPinPadding;
+	private int mPinTextColor;
 	private boolean mArePinsTemporary = true;
 
-	private PinTextFormatter mPinTextFormatter = new PinTextFormatter() {
+	// Connecting Line
+	private float mConnectingLineWeight;
+	private int mConnectingLineColor;
+
+	// Listeners
+	private OnRangeBarChangeListener mListener;
+
+	private boolean mIsRangeBar = true;
+	private int mActiveConnectingLineColor;
+	private int mActiveBarColor;
+	private int mActiveTickColor;
+	private int mActiveCircleColor;
+
+	private ValueFormatter mValueFormatter = new ValueFormatter() {
 		@Override
-		public String getText(String value) {
+		public String getLabel(int index) {
+			String value = Integer.toString(index);
 			if (value.length() > 4) {
 				return value.substring(0, 4);
 			}
@@ -213,53 +171,38 @@ public abstract class AbsRangeBar extends View {
 
 		try {
 			// Sets the values of the user-defined attributes based on the XML attributes.
-			final float tickStart = ta.getFloat(R.styleable.AbsRangeBar_tickStart, DEFAULT_TICK_START);
-			final float tickEnd = ta.getFloat(R.styleable.AbsRangeBar_tickEnd, DEFAULT_TICK_END);
-			final float tickInterval = ta.getFloat(R.styleable.AbsRangeBar_tickInterval, DEFAULT_TICK_INTERVAL);
-			int tickCount = (int) ((tickEnd - tickStart) / tickInterval) + 1;
+			mTickStart = ta.getFloat(R.styleable.AbsRangeBar_tickStart, DEFAULT_TICK_START);
+			mTickEnd = ta.getFloat(R.styleable.AbsRangeBar_tickEnd, DEFAULT_TICK_END);
+			mTickCount = ta.getInt(R.styleable.AbsRangeBar_tickCount, DEFAULT_TICK_COUNT);
+			validateTickCount();
+			mPinIndex = new int[]{0, mTickCount - 1};
 
-			if (isValidTickCount(tickCount)) {
-				// Similar functions performed above in setTickCount; make sure
-				// you know how they interact
-				mTickCount = tickCount;
-				mTickStart = tickStart;
-				mTickEnd = tickEnd;
-				mTickInterval = tickInterval;
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex),
-						getPinValue(mRightIndex));
-				}
-			}
-			else {
-				Log.e(TAG, "tickCount less than 2; invalid tickCount. XML input ignored.");
+			if (mListener != null) {
+				mListener.onRangeChangeListener(this, mPinIndex);
 			}
 
 			float density = context.getResources().getDisplayMetrics().density;
 			mTickSize = ta.getDimension(R.styleable.AbsRangeBar_tickHeight,
-				DEFAULT_TICK_HEIGHT_DP * density);
+				DEFAULT_TICK_SIZE_DP * density);
 			mBarWeight = ta.getDimension(R.styleable.AbsRangeBar_barWeight,
-				DEFAULT_BAR_WEIGHT_PX);
+				DEFAULT_BAR_WEIGHT_DP * density);
 			mBarColor = ta.getColor(R.styleable.AbsRangeBar_rangeBarColor,
 				DEFAULT_BAR_COLOR);
-			mTextColor = ta.getColor(R.styleable.AbsRangeBar_textColor,
+			mPinTextColor = ta.getColor(R.styleable.AbsRangeBar_textColor,
 				DEFAULT_TEXT_COLOR);
 			mPinColor = ta.getColor(R.styleable.AbsRangeBar_pinColor,
 				DEFAULT_PIN_COLOR);
 			mActiveBarColor = mBarColor;
-			mCircleSize = ta.getDimension(R.styleable.AbsRangeBar_selectorSize,
+			mSelectorSize = ta.getDimension(R.styleable.AbsRangeBar_selectorSize,
 				DEFAULT_CIRCLE_SIZE_DP * density);
-			mCircleColor = ta.getColor(R.styleable.AbsRangeBar_selectorColor,
+			mSelectorColor = ta.getColor(R.styleable.AbsRangeBar_selectorColor,
 				DEFAULT_CONNECTING_LINE_COLOR);
-			mActiveCircleColor = mCircleColor;
+			mActiveCircleColor = mSelectorColor;
 			mTickColor = ta.getColor(R.styleable.AbsRangeBar_tickColor,
 				DEFAULT_TICK_COLOR);
 			mActiveTickColor = mTickColor;
 			mConnectingLineWeight = ta.getDimension(R.styleable.AbsRangeBar_connectingLineWeight,
-				DEFAULT_CONNECTING_LINE_WEIGHT_PX);
+				DEFAULT_CONNECTING_LINE_WEIGHT_DP * density);
 			mConnectingLineColor = ta.getColor(R.styleable.AbsRangeBar_connectingLineColor,
 				DEFAULT_CONNECTING_LINE_COLOR);
 			mActiveConnectingLineColor = mConnectingLineColor;
@@ -292,29 +235,25 @@ public abstract class AbsRangeBar extends View {
 
 		bundle.putParcelable("instanceState", super.onSaveInstanceState());
 
-		bundle.putInt("TICK_COUNT", mTickCount);
 		bundle.putFloat("TICK_START", mTickStart);
 		bundle.putFloat("TICK_END", mTickEnd);
-		bundle.putFloat("TICK_INTERVAL", mTickInterval);
+		bundle.putInt("TICK_COUNT", mTickCount);
 		bundle.putInt("TICK_COLOR", mTickColor);
 
-		bundle.putFloat("TICK_HEIGHT_DP", mTickSize);
+		bundle.putFloat("TICK_SIZE", mTickSize);
 		bundle.putFloat("BAR_WEIGHT", mBarWeight);
 		bundle.putInt("BAR_COLOR", mBarColor);
 		bundle.putFloat("CONNECTING_LINE_WEIGHT", mConnectingLineWeight);
 		bundle.putInt("CONNECTING_LINE_COLOR", mConnectingLineColor);
 
-		bundle.putFloat("CIRCLE_SIZE", mCircleSize);
-		bundle.putInt("CIRCLE_COLOR", mCircleColor);
-		bundle.putFloat("THUMB_RADIUS_DP", mThumbRadiusDP);
-		bundle.putFloat("EXPANDED_PIN_RADIUS_DP", mExpandedPinRadius);
+		bundle.putFloat("SELECTOR_SIZE", mSelectorSize);
+		bundle.putInt("SELECTOR_COLOR", mSelectorColor);
+		bundle.putFloat("PIN_RADIUS", mPinRadius);
+		bundle.putFloat("EXPANDED_PIN_RADIUS", mExpandedPinRadius);
 		bundle.putFloat("PIN_PADDING", mPinPadding);
 		bundle.putBoolean("IS_RANGE_BAR", mIsRangeBar);
 		bundle.putBoolean("ARE_PINS_TEMPORARY", mArePinsTemporary);
-		bundle.putInt("LEFT_INDEX", mLeftIndex);
-		bundle.putInt("RIGHT_INDEX", mRightIndex);
-
-		bundle.putBoolean("FIRST_SET_TICK_COUNT", mFirstSetTickCount);
+		bundle.putIntArray("PIN_INDEXES", mPinIndex);
 
 		bundle.putFloat("MIN_PIN_FONT", mMinPinFont);
 		bundle.putFloat("MAX_PIN_FONT", mMaxPinFont);
@@ -329,33 +268,29 @@ public abstract class AbsRangeBar extends View {
 
 			Bundle bundle = (Bundle) state;
 
-			mTickCount = bundle.getInt("TICK_COUNT");
 			mTickStart = bundle.getFloat("TICK_START");
 			mTickEnd = bundle.getFloat("TICK_END");
-			mTickInterval = bundle.getFloat("TICK_INTERVAL");
+			mTickCount = bundle.getInt("TICK_COUNT");
 			mTickColor = bundle.getInt("TICK_COLOR");
-			mTickSize = bundle.getFloat("TICK_HEIGHT_DP");
+			mTickSize = bundle.getFloat("TICK_SIZE");
 			mBarWeight = bundle.getFloat("BAR_WEIGHT");
 			mBarColor = bundle.getInt("BAR_COLOR");
-			mCircleSize = bundle.getFloat("CIRCLE_SIZE");
-			mCircleColor = bundle.getInt("CIRCLE_COLOR");
+			mSelectorSize = bundle.getFloat("SELECTOR_SIZE");
+			mSelectorColor = bundle.getInt("SELECTOR_COLOR");
 			mConnectingLineWeight = bundle.getFloat("CONNECTING_LINE_WEIGHT");
 			mConnectingLineColor = bundle.getInt("CONNECTING_LINE_COLOR");
 
-			mThumbRadiusDP = bundle.getFloat("THUMB_RADIUS_DP");
-			mExpandedPinRadius = bundle.getFloat("EXPANDED_PIN_RADIUS_DP");
+			mPinRadius = bundle.getFloat("PIN_RADIUS");
+			mExpandedPinRadius = bundle.getFloat("EXPANDED_PIN_RADIUS");
 			mPinPadding = bundle.getFloat("PIN_PADDING");
 			mIsRangeBar = bundle.getBoolean("IS_RANGE_BAR");
 			mArePinsTemporary = bundle.getBoolean("ARE_PINS_TEMPORARY");
 
-			mLeftIndex = bundle.getInt("LEFT_INDEX");
-			mRightIndex = bundle.getInt("RIGHT_INDEX");
-			mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT");
+			mPinIndex = bundle.getIntArray("PIN_INDEXES");
 
 			mMinPinFont = bundle.getFloat("MIN_PIN_FONT");
 			mMaxPinFont = bundle.getFloat("MAX_PIN_FONT");
 
-			setRangePinsByIndices(mLeftIndex, mRightIndex);
 			super.onRestoreInstanceState(bundle.getParcelable("instanceState"));
 
 		}
@@ -384,18 +319,18 @@ public abstract class AbsRangeBar extends View {
 			width = measureWidth;
 		}
 		else {
-			width = mDefaultWidth;
+			width = DEFAULT_WIDTH;
 		}
 
 		// The RangeBar height should be as small as possible.
 		if (measureHeightMode == MeasureSpec.AT_MOST) {
-			height = Math.min(mDefaultHeight, measureHeight);
+			height = Math.min(DEFAULT_HEIGHT, measureHeight);
 		}
 		else if (measureHeightMode == MeasureSpec.EXACTLY) {
 			height = measureHeight;
 		}
 		else {
-			height = mDefaultHeight;
+			height = DEFAULT_HEIGHT;
 		}
 
 		setMeasuredDimension(width, height);
@@ -410,17 +345,24 @@ public abstract class AbsRangeBar extends View {
 
 		initPins();
 
+		updatePinIndicesAndLabelsBasedOnPosition();
+	}
+
+	private void updatePinIndicesAndLabelsBasedOnPosition() {
 		// Set the thumb indices.
-		final int newLeftIndex = mIsRangeBar ? getNearestTickIndex(mLeftThumb) : 0;
-		final int newRightIndex = getNearestTickIndex(mRightThumb);
+		boolean changed = false;
+		for (int i = 0; i < mPinIndex.length; i++) {
+			int newIndex = getNearestTickIndex(mPinView[i]);
+			if (newIndex != mPinIndex[i]) {
+				changed = true;
+				mPinIndex[i] = newIndex;
+				mPinView[i].setLabel(getPinLabel(newIndex));
+			}
+		}
 
 		// Call the listener.
-		if (newLeftIndex != mLeftIndex || newRightIndex != mRightIndex) {
-			if (mListener != null) {
-				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-					getPinValue(mLeftIndex),
-					getPinValue(mRightIndex));
-			}
+		if (changed && mListener != null) {
+			mListener.onRangeChangeListener(this, mPinIndex);
 		}
 	}
 
@@ -433,13 +375,13 @@ public abstract class AbsRangeBar extends View {
 			drawTicks(canvas);
 		}
 		if (mIsRangeBar) {
-			drawConnectingLine(canvas, mLeftThumb, mRightThumb);
-			mLeftThumb.draw(canvas);
+			drawConnectingLine(canvas, mPinView[0], mPinView[1]);
+			mPinView[0].draw(canvas);
 		}
 		else {
-			drawConnectingLine(canvas, mRightThumb);
+			drawConnectingLine(canvas, mPinView[1]);
 		}
-		mRightThumb.draw(canvas);
+		mPinView[1].draw(canvas);
 
 	}
 
@@ -539,13 +481,12 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Sets a listener to modify the text
+	 * Sets an object to format pin values.
 	 *
-	 * @param mPinTextListener the RangeBar pin text notification listener; null to remove any
-	 *                         existing listener
+	 * @param formatter
 	 */
-	public void setPinTextListener(OnRangeBarTextListener mPinTextListener) {
-		this.mPinTextListener = mPinTextListener;
+	public void setValueFormatter(ValueFormatter formatter) {
+		this.mValueFormatter = formatter;
 	}
 
 	/**
@@ -558,138 +499,38 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Sets the start tick in the RangeBar.
+	 * Sets up the tick in the RangeBar.
 	 *
-	 * @param tickStart Integer specifying the number of ticks.
+	 * @param start float specifying the leftmost value of the bar
+	 * @param end   float specifying the rightmost value of the bar
+	 * @param count int specifying the number of pins to display
 	 */
-	public void setTickStart(float tickStart) {
-		int tickCount = (int) ((mTickEnd - tickStart) / mTickInterval) + 1;
-		if (isValidTickCount(tickCount)) {
-			mTickCount = tickCount;
-			mTickStart = tickStart;
-
-			// Prevents resetting the indices when creating new activity, but
-			// allows it on the first setting.
-			if (mFirstSetTickCount) {
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex),
-						getPinValue(mRightIndex));
-				}
-			}
-
-			if (indexOutOfRange(mLeftIndex, mRightIndex)) {
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex),
-						getPinValue(mRightIndex));
-				}
-			}
-
-			mTickPaint.setColor(mTickColor);
-			initPins();
+	public void setTicks(float start, float end, int count) {
+		mTickStart = start;
+		mTickEnd = end;
+		mTickCount = count;
+		if (mTickStart > mTickEnd) {
+			float tmp = mTickStart;
+			mTickStart = mTickEnd;
+			mTickEnd = tmp;
 		}
-		else {
-			Log.e(TAG, "tickCount less than 2; invalid tickCount.");
-			throw new IllegalArgumentException("tickCount less than 2; invalid tickCount.");
+		validateTickCount();
+		clampPins();
+	}
+
+	private void clampPins() {
+		for (int i = 0; i < mPinIndex.length; i++) {
+			mPinIndex[i] = clampIndex(mPinIndex[i], 0, mTickCount - 1);
 		}
 	}
 
 	/**
-	 * Sets the start tick in the RangeBar.
+	 * Sets the size (radius) of the ticks in the range bar.
 	 *
-	 * @param tickInterval Integer specifying the number of ticks.
+	 * @param size Float size the height of each tick mark in px.
 	 */
-	public void setTickInterval(float tickInterval) {
-		int tickCount = (int) ((mTickEnd - mTickStart) / tickInterval) + 1;
-		if (isValidTickCount(tickCount)) {
-			mTickCount = tickCount;
-			mTickInterval = tickInterval;
-
-			// Prevents resetting the indices when creating new activity, but
-			// allows it on the first setting.
-			if (mFirstSetTickCount) {
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex), getPinValue(mRightIndex));
-				}
-			}
-			if (indexOutOfRange(mLeftIndex, mRightIndex)) {
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex), getPinValue(mRightIndex));
-				}
-			}
-
-			mTickPaint.setColor(mTickColor);
-			initPins();
-		}
-		else {
-			Log.e(TAG, "tickCount less than 2; invalid tickCount.");
-			throw new IllegalArgumentException("tickCount less than 2; invalid tickCount.");
-		}
-	}
-
-	/**
-	 * Sets the end tick in the RangeBar.
-	 *
-	 * @param tickEnd Integer specifying the number of ticks.
-	 */
-	public void setTickEnd(float tickEnd) {
-		int tickCount = (int) ((tickEnd - mTickStart) / mTickInterval) + 1;
-		if (isValidTickCount(tickCount)) {
-			mTickCount = tickCount;
-			mTickEnd = tickEnd;
-
-			// Prevents resetting the indices when creating new activity, but
-			// allows it on the first setting.
-			if (mFirstSetTickCount) {
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex), getPinValue(mRightIndex));
-				}
-			}
-			if (indexOutOfRange(mLeftIndex, mRightIndex)) {
-				mLeftIndex = 0;
-				mRightIndex = mTickCount - 1;
-
-				if (mListener != null) {
-					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-						getPinValue(mLeftIndex), getPinValue(mRightIndex));
-				}
-			}
-
-			mTickPaint.setColor(mTickColor);
-			initPins();
-		}
-		else {
-			Log.e(TAG, "tickCount less than 2; invalid tickCount.");
-			throw new IllegalArgumentException("tickCount less than 2; invalid tickCount.");
-		}
-	}
-
-	/**
-	 * Sets the height of the ticks in the range bar.
-	 *
-	 * @param tickHeight Float specifying the height of each tick mark in px.
-	 */
-	public void setTickHeight(float tickHeight) {
-		mTickSize = tickHeight;
+	public void setTickHeight(float size) {
+		mTickSize = size;
 		invalidate();
 	}
 
@@ -732,7 +573,7 @@ public abstract class AbsRangeBar extends View {
 	 * @param textColor Integer specifying the color of the text in the pin.
 	 */
 	public void setPinTextColor(int textColor) {
-		mTextColor = textColor;
+		mPinTextColor = textColor;
 		initPins();
 	}
 
@@ -746,7 +587,6 @@ public abstract class AbsRangeBar extends View {
 		invalidate();
 	}
 
-
 	/**
 	 * Set if the pins should dissapear after released
 	 *
@@ -757,7 +597,6 @@ public abstract class AbsRangeBar extends View {
 		mArePinsTemporary = arePinsTemporary;
 		invalidate();
 	}
-
 
 	/**
 	 * Set the color of the ticks.
@@ -776,7 +615,7 @@ public abstract class AbsRangeBar extends View {
 	 * @param selectorColor Integer specifying the color of the ticks.
 	 */
 	public void setSelectorColor(int selectorColor) {
-		mCircleColor = selectorColor;
+		mSelectorColor = selectorColor;
 		initPins();
 	}
 
@@ -816,7 +655,7 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Gets the start tick.
+	 * Gets the value of the start tick.
 	 *
 	 * @return the start tick.
 	 */
@@ -825,7 +664,7 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Gets the end tick.
+	 * Gets the value of the end tick.
 	 *
 	 * @return the end tick.
 	 */
@@ -843,151 +682,64 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Sets the location of the pins according by the supplied index.
-	 * Numbered from 0 to mTickCount - 1 from the left.
+	 * Sets the value of the pins of this range bar. Silently adjust to the bar's ticks.
+	 * Silently swaps left and right pins, if left is now greater than right.
 	 *
-	 * @param leftPinIndex  Integer specifying the index of the left pin
-	 * @param rightPinIndex Integer specifying the index of the right pin
+	 * @param start
+	 * @param end
 	 */
-	public void setRangePinsByIndices(int leftPinIndex, int rightPinIndex) {
-		if (indexOutOfRange(leftPinIndex, rightPinIndex)) {
-			Log.e(TAG,
-				"Pin index left " + leftPinIndex + ", or right " + rightPinIndex
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ mTickStart + ") and less than the maximum value ("
-					+ mTickEnd + ")");
-			throw new IllegalArgumentException(
-				"Pin index left " + leftPinIndex + ", or right " + rightPinIndex
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ mTickStart + ") and less than the maximum value ("
-					+ mTickEnd + ")");
-		}
-		else {
-
-			if (mFirstSetTickCount) {
-				mFirstSetTickCount = false;
-			}
-			mLeftIndex = leftPinIndex;
-			mRightIndex = rightPinIndex;
-			initPins();
-
-			if (mListener != null) {
-				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-					getPinValue(mLeftIndex), getPinValue(mRightIndex));
-			}
-		}
-
-		invalidate();
-		requestLayout();
+	public void setPinValues(float start, float end) {
+		setPinIndices(new int[] {
+			(int) ((start - mTickStart) / getTickInterval()),
+			(int) ((end - mTickStart) / getTickInterval())
+		});
 	}
 
 	/**
-	 * Sets the location of pin according by the supplied index.
-	 * Numbered from 0 to mTickCount - 1 from the left.
+	 * Sets the indices of the pins of this range bar. Silently adjust to the bar's ticks.
+	 * Silently sorts the array of indices.
 	 *
-	 * @param pinIndex Integer specifying the index of the seek pin
+	 * @param indices
 	 */
-	public void setSeekPinByIndex(int pinIndex) {
-		if (pinIndex < 0 || pinIndex > mTickCount) {
-			Log.e(TAG,
-				"Pin index " + pinIndex
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ 0 + ") and less than the maximum value ("
-					+ mTickCount + ")");
-			throw new IllegalArgumentException(
-				"Pin index " + pinIndex
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ 0 + ") and less than the maximum value ("
-					+ mTickCount + ")");
-
+	public void setPinIndices(int[] indices) {
+		if (!isRangeBar()) {
+			throw new RuntimeException("Cannot set multiple values on a non Range Bar");
 		}
-		else {
-
-			if (mFirstSetTickCount) {
-				mFirstSetTickCount = false;
-			}
-			mRightIndex = pinIndex;
-			initPins();
-
-			if (mListener != null) {
-				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-					getPinValue(mLeftIndex), getPinValue(mRightIndex));
-			}
-		}
+		Arrays.sort(indices);
+		clampPins();
+		initPins();
 		invalidate();
-		requestLayout();
 	}
 
 	/**
-	 * Sets the location of pins according by the supplied values.
+	 * Sets the value of the left pin. Silently adjust to the bar's ticks.
+	 * Silently swaps left and right pins, if left is now greater than right.
 	 *
-	 * @param leftPinValue  Float specifying the index of the left pin
-	 * @param rightPinValue Float specifying the index of the right pin
+	 * @param value
 	 */
-	public void setRangePinsByValue(float leftPinValue, float rightPinValue) {
-		if (valueOutOfRange(leftPinValue, rightPinValue)) {
-			Log.e(TAG,
-				"Pin value left " + leftPinValue + ", or right " + rightPinValue
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ mTickStart + ") and less than the maximum value ("
-					+ mTickEnd + ")");
-			throw new IllegalArgumentException(
-				"Pin value left " + leftPinValue + ", or right " + rightPinValue
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ mTickStart + ") and less than the maximum value ("
-					+ mTickEnd + ")");
-		}
-		else {
-			if (mFirstSetTickCount) {
-				mFirstSetTickCount = false;
-			}
-
-			mLeftIndex = (int) ((leftPinValue - mTickStart) / mTickInterval);
-			mRightIndex = (int) ((rightPinValue - mTickStart) / mTickInterval);
-			initPins();
-
-			if (mListener != null) {
-				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-					getPinValue(mLeftIndex), getPinValue(mRightIndex));
-			}
-		}
-		invalidate();
-		requestLayout();
+	public void setPinValue(float value) {
+		setPinIndex((int) ((value - mTickStart) / getTickInterval()));
 	}
 
 	/**
-	 * Sets the location of pin according by the supplied value.
+	 * Sets the index of the right pin. Silently adjust to the bar's ticks.
+	 * Silently swaps left and right pins, if left is now greater than right.
 	 *
-	 * @param pinValue Float specifying the value of the pin
+	 * @param index
 	 */
-	public void setSeekPinByValue(float pinValue) {
-		if (pinValue > mTickEnd || pinValue < mTickStart) {
-			Log.e(TAG,
-				"Pin value " + pinValue
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ mTickStart + ") and less than the maximum value ("
-					+ mTickEnd + ")");
-			throw new IllegalArgumentException(
-				"Pin value " + pinValue
-					+ " is out of bounds. Check that it is greater than the minimum ("
-					+ mTickStart + ") and less than the maximum value ("
-					+ mTickEnd + ")");
-
+	public void setPinIndex(int index) {
+		if (isRangeBar()) {
+			throw new RuntimeException("Cannot set single value on a Range Bar");
 		}
-		else {
-			if (mFirstSetTickCount) {
-				mFirstSetTickCount = false;
-			}
-			mRightIndex = (int) ((pinValue - mTickStart) / mTickInterval);
-			initPins();
-
-			if (mListener != null) {
-				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-					getPinValue(mLeftIndex), getPinValue(mRightIndex));
-			}
-		}
+		mPinIndex[1] = clampIndex(index, 0, mTickCount - 1);
+		initPins();
 		invalidate();
-		requestLayout();
+	}
+
+	private int clampIndex(int index, int min, int max) {
+		return index < min ? min
+			: index > max ? max
+				: index;
 	}
 
 	/**
@@ -1005,7 +757,7 @@ public abstract class AbsRangeBar extends View {
 	 * @return the 0-based index of the left pin
 	 */
 	public int getLeftIndex() {
-		return mLeftIndex;
+		return mPinIndex[0];
 	}
 
 	/**
@@ -1014,7 +766,7 @@ public abstract class AbsRangeBar extends View {
 	 * @return the 0-based index of the right pin
 	 */
 	public int getRightIndex() {
-		return mRightIndex;
+		return mPinIndex[1];
 	}
 
 	/**
@@ -1022,8 +774,8 @@ public abstract class AbsRangeBar extends View {
 	 *
 	 * @return the tick interval
 	 */
-	public double getTickInterval() {
-		return mTickInterval;
+	public float getTickInterval() {
+		return (mTickEnd - mTickStart) / (mTickCount - 1);
 	}
 
 	@Override
@@ -1031,13 +783,13 @@ public abstract class AbsRangeBar extends View {
 		if (!enabled) {
 			mBarColor = DEFAULT_BAR_COLOR;
 			mConnectingLineColor = DEFAULT_BAR_COLOR;
-			mCircleColor = DEFAULT_BAR_COLOR;
+			mSelectorColor = DEFAULT_BAR_COLOR;
 			mTickColor = DEFAULT_BAR_COLOR;
 		}
 		else {
 			mBarColor = mActiveBarColor;
 			mConnectingLineColor = mActiveConnectingLineColor;
-			mCircleColor = mActiveCircleColor;
+			mSelectorColor = mActiveCircleColor;
 			mTickColor = mActiveTickColor;
 		}
 
@@ -1051,82 +803,62 @@ public abstract class AbsRangeBar extends View {
 		super.setEnabled(enabled);
 	}
 
-	public void setPinTextFormatter(PinTextFormatter pinTextFormatter) {
-		this.mPinTextFormatter = pinTextFormatter;
-	}
-
 	// Private Methods /////////////////////////////////////////////////////////
 
 	/**
-	 * Creates two new Pins.
+	 * Initializes (and creates if necessary) the one or two Pins.
 	 */
 	private void initPins() {
 		Context ctx = getContext();
 
+		if (mPinView == null) {
+			mPinView = new PinView[2];
+		}
+
 		if (mIsRangeBar) {
 			PointF leftPoint = new PointF();
-			getPointOfTick(leftPoint, 0);
-			if (mLeftThumb == null) {
-				mLeftThumb = new PinView(ctx);
+			getPointOfTick(leftPoint, mPinIndex[0]);
+			if (mPinView[0] == null) {
+				mPinView[0] = new PinView(ctx);
 			}
-			mLeftThumb.init(leftPoint,
-				0, mPinColor, mTextColor,
-				mCircleSize, mCircleColor,
+			Arrays.sort(mPinIndex);
+			mPinView[0].init(leftPoint,
+				0, mPinColor, mPinTextColor,
+				mSelectorSize, mSelectorColor,
 				mMinPinFont, mMaxPinFont);
-			mLeftThumb.setLabel(getPinValue(mLeftIndex));
+			mPinView[0].setLabel(getPinLabel(mPinIndex[0]));
 		}
+
 		PointF rightPoint = new PointF();
-		getPointOfTick(rightPoint, mTickCount - 1);
-		if (mRightThumb == null) {
-			mRightThumb = new PinView(ctx);
+		getPointOfTick(rightPoint, mPinIndex[1]);
+		if (mPinView[1] == null) {
+			mPinView[1] = new PinView(ctx);
 		}
-		mRightThumb.init(rightPoint,
-			0, mPinColor, mTextColor,
-			mCircleSize, mCircleColor,
+		mPinView[1].init(rightPoint,
+			0, mPinColor, mPinTextColor,
+			mSelectorSize, mSelectorColor,
 			mMinPinFont, mMaxPinFont);
-		mRightThumb.setLabel(getPinValue(mRightIndex));
+		mPinView[1].setLabel(getPinLabel(mPinIndex[1]));
 
 		invalidate();
 	}
 
 	/**
-	 * Returns if either index is outside the range of the tickCount.
-	 *
-	 * @param leftThumbIndex  Integer specifying the left thumb index.
-	 * @param rightThumbIndex Integer specifying the right thumb index.
-	 * @return boolean If the index is out of range.
-	 */
-	private boolean indexOutOfRange(int leftThumbIndex, int rightThumbIndex) {
-		return (leftThumbIndex < 0 || leftThumbIndex >= mTickCount
-			|| rightThumbIndex < 0
-			|| rightThumbIndex >= mTickCount);
-	}
-
-	/**
-	 * Returns if either value is outside the range of the tickCount.
-	 *
-	 * @param leftThumbValue  Float specifying the left thumb value.
-	 * @param rightThumbValue Float specifying the right thumb value.
-	 * @return boolean If the index is out of range.
-	 */
-	private boolean valueOutOfRange(float leftThumbValue, float rightThumbValue) {
-		return (leftThumbValue < mTickStart || leftThumbValue > mTickEnd
-			|| rightThumbValue < mTickStart || rightThumbValue > mTickEnd);
-	}
-
-	/**
 	 * If is invalid tickCount, rejects. TickCount must be greater than 1
-	 *
-	 * @param tickCount Integer
-	 * @return boolean: whether tickCount > 1
 	 */
-	private boolean isValidTickCount(int tickCount) {
-		return (tickCount > 1);
+	private void validateTickCount() {
+		if (mTickCount < 2) {
+			throw new RuntimeException("TickCount less than 2; invalid tickCount.");
+		}
 	}
 
 	private boolean isInTargetZone(float x, float y) {
-		return mLeftThumb != null && mLeftThumb.isInTargetZone(x, y)
-			|| mRightThumb.isInTargetZone(x, y);
+		for (int i = 0; i < mPinView.length; i++) {
+			if (mPinView[i] != null && mPinView[i].isInTargetZone(x, y)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1136,17 +868,10 @@ public abstract class AbsRangeBar extends View {
 	 * @param y the y-coordinate of the down action
 	 */
 	private void onActionDown(float x, float y) {
-		if (mIsRangeBar) {
-			if (!mRightThumb.isPressed() && mLeftThumb.isInTargetZone(x, y)) {
-				pressPin(mLeftThumb);
-			}
-			else if (!mLeftThumb.isPressed() && mRightThumb.isInTargetZone(x, y)) {
-				pressPin(mRightThumb);
-			}
-		}
-		else {
-			if (mRightThumb.isInTargetZone(x, y)) {
-				pressPin(mRightThumb);
+		for (int i = 0; i < mPinView.length; i++) {
+			if (mPinView[i] != null && mPinView[i].isInTargetZone(x, y)) {
+				pressPin(mPinView[i]);
+				return;
 			}
 		}
 	}
@@ -1162,41 +887,24 @@ public abstract class AbsRangeBar extends View {
 		getNearestPointOnBar(point, point);
 
 		// Move the pressed thumb to the new position.
-		if (mIsRangeBar && mLeftThumb.isPressed()) {
-			movePin(mLeftThumb, point);
-		}
-		else if (mRightThumb.isPressed()) {
-			movePin(mRightThumb, point);
+		for (int i = 0; i < mPinView.length; i++) {
+			if (mPinView[i] != null && mPinView[i].isPressed()) {
+				movePin(mPinView[i], point);
+			}
 		}
 
 		// If the thumbs have switched order, fix the references.
-		if (mIsRangeBar && comparePointsOnBar(mLeftThumb.getPosition(), mRightThumb.getPosition()) > 0) {
-			final PinView temp = mLeftThumb;
-			mLeftThumb = mRightThumb;
-			mRightThumb = temp;
-		}
+		Arrays.sort(mPinView, mPinViewComparator);
 
-		// Get the updated nearest tick marks for each thumb.
-		int newLeftIndex = mIsRangeBar ? getNearestTickIndex(mLeftThumb) : 0;
-		int newRightIndex = getNearestTickIndex(mRightThumb);
-
-		// If either of the indices have changed, update and call the listener.
-		if (newLeftIndex != mLeftIndex || newRightIndex != mRightIndex) {
-
-			mLeftIndex = newLeftIndex;
-			mRightIndex = newRightIndex;
-			if (mIsRangeBar) {
-				mLeftThumb.setLabel(getPinValue(mLeftIndex));
-			}
-			mRightThumb.setLabel(getPinValue(mRightIndex));
-
-			if (mListener != null) {
-				mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-					getPinValue(mLeftIndex),
-					getPinValue(mRightIndex));
-			}
-		}
+		updatePinIndicesAndLabelsBasedOnPosition();
 	}
+
+	private Comparator<PinView> mPinViewComparator = new Comparator<PinView>() {
+		@Override
+		public int compare(PinView lhs, PinView rhs) {
+			return comparePointsOnBar(lhs.getPosition(), rhs.getPosition());
+		}
+	};
 
 	/**
 	 * Handles a {@link android.view.MotionEvent#ACTION_UP} event.
@@ -1205,48 +913,11 @@ public abstract class AbsRangeBar extends View {
 	 * @param y the y-coordinate of the up action
 	 */
 	private void onActionUp(float x, float y) {
-		if (mIsRangeBar && mLeftThumb.isPressed()) {
-			releasePin(mLeftThumb);
+		for (int i = 0; i < mPinView.length; i++) {
+			if (mPinView[i] != null && mPinView[i].isPressed()) {
+				releasePin(mPinView[i]);
+			}
 		}
-		else if (mRightThumb.isPressed()) {
-			releasePin(mRightThumb);
-		}
-		//TODO: is this ever called?
-//		else {
-//
-//			float leftThumbXDistance = mIsRangeBar ? Math.abs(mLeftThumb.getX() - x) : 0;
-//			float rightThumbXDistance = Math.abs(mRightThumb.getX() - x);
-//
-//			if (leftThumbXDistance < rightThumbXDistance) {
-//				if (mIsRangeBar) {
-//
-//					mLeftThumb.setX(x); //TODO: this is wrong
-//					//TODO this instead mLeftThumb.setPosition(something);
-//					releasePin(mLeftThumb);
-//				}
-//			}
-//			else {
-//				mRightThumb.setX(x); //TODO: this is wrong
-//				//TODO this instead mRightThumb.setPosition(something);
-//				releasePin(mRightThumb);
-//			}
-//
-//			// Get the updated nearest tick marks for each thumb.
-//			final int newLeftIndex = mIsRangeBar ? getNearestTickIndex(mLeftThumb) : 0;
-//			final int newRightIndex = getNearestTickIndex(mRightThumb);
-//			// If either of the indices have changed, update and call the listener.
-//			if (newLeftIndex != mLeftIndex || newRightIndex != mRightIndex) {
-//
-//				mLeftIndex = newLeftIndex;
-//				mRightIndex = newRightIndex;
-//
-//				if (mListener != null) {
-//					mListener.onRangeChangeListener(this, mLeftIndex, mRightIndex,
-//						getPinValue(mLeftIndex),
-//						getPinValue(mRightIndex));
-//				}
-//			}
-//		}
 	}
 
 	/**
@@ -1256,17 +927,13 @@ public abstract class AbsRangeBar extends View {
 	 * @param thumb the thumb to press
 	 */
 	private void pressPin(final PinView thumb) {
-		if (mFirstSetTickCount) {
-			mFirstSetTickCount = false;
-		}
 		if (mArePinsTemporary) {
 			ValueAnimator animator = ValueAnimator.ofFloat(0, mExpandedPinRadius);
 			animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
 				@Override
 				public void onAnimationUpdate(ValueAnimator animation) {
-					mThumbRadiusDP = (Float) (animation.getAnimatedValue());
-					thumb.setSize(mThumbRadiusDP, mPinPadding * animation.getAnimatedFraction());
+					mPinRadius = (Float) (animation.getAnimatedValue());
+					thumb.setSize(mPinRadius, mPinPadding * animation.getAnimatedFraction());
 					invalidate();
 				}
 			});
@@ -1274,6 +941,7 @@ public abstract class AbsRangeBar extends View {
 		}
 
 		thumb.press();
+
 	}
 
 	/**
@@ -1283,13 +951,12 @@ public abstract class AbsRangeBar extends View {
 	 * @param thumb the thumb to release
 	 */
 	private void releasePin(final PinView thumb) {
-
 		PointF point = new PointF();
 		getNearestTickPosition(point, thumb.getPosition());
 		thumb.setPosition(point);
 		int tickIndex = getNearestTickIndex(thumb);
 
-		thumb.setLabel(getPinValue(tickIndex));
+		thumb.setLabel(getPinLabel(tickIndex));
 
 		if (mArePinsTemporary) {
 			ValueAnimator animator = ValueAnimator.ofFloat(mExpandedPinRadius, 0);
@@ -1297,8 +964,8 @@ public abstract class AbsRangeBar extends View {
 
 				@Override
 				public void onAnimationUpdate(ValueAnimator animation) {
-					mThumbRadiusDP = (Float) (animation.getAnimatedValue());
-					thumb.setSize(mThumbRadiusDP,
+					mPinRadius = (Float) (animation.getAnimatedValue());
+					thumb.setSize(mPinRadius,
 						mPinPadding - (mPinPadding * animation.getAnimatedFraction()));
 					invalidate();
 				}
@@ -1313,26 +980,15 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Set the value on the thumb pin, either from map or calculated from the tick intervals
-	 * Integer check to format decimals as whole numbers
+	 * Calculates the value for the tickmark at index n.
 	 *
-	 * @param tickIndex the index to set the value for
+	 * @param tickIndex the index to get the value for
 	 */
-	private String getPinValue(int tickIndex) {
-		if (mPinTextListener != null) {
-			return mPinTextListener.getPinValue(this, tickIndex);
+	public String getPinLabel(int tickIndex) {
+		if (mValueFormatter == null) {
+			return Integer.toString(tickIndex);
 		}
-		float tickValue = (tickIndex == (mTickCount - 1))
-			? mTickEnd
-			: (tickIndex * mTickInterval) + mTickStart;
-		String xValue;
-		if (tickValue == Math.ceil(tickValue)) {
-			xValue = String.valueOf((int) tickValue);
-		}
-		else {
-			xValue = String.valueOf(tickValue);
-		}
-		return mPinTextFormatter.getText(xValue);
+		return mValueFormatter.getLabel(tickIndex);
 	}
 
 	/**
@@ -1498,21 +1154,11 @@ public abstract class AbsRangeBar extends View {
 	 * for every movement of the thumb.
 	 */
 	public interface OnRangeBarChangeListener {
-		void onRangeChangeListener(AbsRangeBar rangeBar, int leftPinIndex,
-			int rightPinIndex, String leftPinValue, String rightPinValue);
+		void onRangeChangeListener(AbsRangeBar rangeBar, int[] indices);
 	}
 
-	public interface PinTextFormatter {
-		String getText(String value);
+	public interface ValueFormatter {
+		String getLabel(int index);
 	}
-
-	/**
-	 * @author robmunro
-	 *         A callback that allows getting pin text exernally
-	 */
-	public interface OnRangeBarTextListener {
-		String getPinValue(AbsRangeBar rangeBar, int tickIndex);
-	}
-
 
 }

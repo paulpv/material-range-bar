@@ -3,7 +3,7 @@
     <declare-styleable name="AbsRangeBar">
         <attr name="tickStart" format="float" />
         <attr name="tickEnd" format="float" />
-        <attr name="tickInterval" format="float" />
+        <attr name="tickCount" format="integer" />
         <attr name="tickHeight" format="dimension" />
         <attr name="tickColor" format="color" />
         <attr name="barWeight" format="dimension" />
