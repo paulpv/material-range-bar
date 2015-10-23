@@ -14,7 +14,6 @@
 package com.dgmltn.ranger;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
@@ -62,7 +61,7 @@ public class PinView extends View {
 
 	private Drawable mPin;
 
-	private String mValue;
+	private String mLabel;
 
 	// Radius of the new thumb if selected
 	private int mPinRadiusPx;
@@ -74,8 +73,6 @@ public class PinView extends View {
 	private float mTextYPadding;
 
 	private Rect mBounds = new Rect();
-
-	private Resources mRes;
 
 	private float mDensity;
 
@@ -115,7 +112,6 @@ public class PinView extends View {
 	public void init(PointF position, float pinRadiusDP, int pinColor, int textColor,
 		float circleRadius, int circleColor, float minFont, float maxFont) {
 
-		mRes = getContext().getResources();
 		mPin = ContextCompat.getDrawable(getContext(), R.drawable.rotate);
 
 		mPosition = position;
@@ -154,24 +150,22 @@ public class PinView extends View {
 		mPosition.set(position);
 	}
 
-
 	/**
-	 * Get the x value of the pin
+	 * Get the x-y location of the pin
 	 *
-	 * @return x float value of the pin
+	 * @return PointF location of the pin
 	 */
 	public PointF getPosition() {
 		return mPosition;
 	}
 
-
 	/**
-	 * Set the value of the pin
+	 * Set the label of the pin
 	 *
-	 * @param x String value of the pin
+	 * @param x String label of the pin
 	 */
 	public void setLabel(String x) {
-		mValue = x;
+		mLabel = x;
 	}
 
 	/**
@@ -237,7 +231,7 @@ public class PinView extends View {
 				(int) mPosition.y - (mPinRadiusPx * 2) - (int) mPinPadding,
 				(int) mPosition.x + mPinRadiusPx, (int) mPosition.y - (int) mPinPadding);
 			mPin.setBounds(mBounds);
-			String text = mValue;
+			String text = mLabel;
 
 			if (this.formatter != null) {
 				text = formatter.format(text);
