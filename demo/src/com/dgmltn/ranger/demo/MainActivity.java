@@ -140,7 +140,7 @@ public class MainActivity extends Activity implements
                 // a dialog warning the user
                 try {
                     if (!leftValue.isEmpty() && !rightValue.isEmpty()) {
-                        rangebar.setPinValues(Float.parseFloat(leftValue), Float.parseFloat(rightValue));
+                        //TODO: rangebar.setPinValues(Float.parseFloat(leftValue), Float.parseFloat(rightValue));
                     }
                 } catch (IllegalArgumentException e) {
                 }
@@ -155,10 +155,7 @@ public class MainActivity extends Activity implements
         tickStartSeek.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
-                try {
-                    rangebar.setTicks(progress, rangebar.getTickEnd(), rangebar.getTickCount());
-                } catch (IllegalArgumentException e) {
-                }
+                // TODO: keep track of start offset
                 tickStart.setText("tickStart = " + progress);
             }
 
@@ -177,11 +174,7 @@ public class MainActivity extends Activity implements
         tickEndSeek.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
-                try {
-                    rangebar.setTicks(rangebar.getTickStart(), progress, rangebar.getTickCount());
-                } catch (IllegalArgumentException e) {
-                }
-                tickEnd.setText("tickEnd = " + progress);
+                // TODO: keep track of end offset
             }
 
             @Override
@@ -200,7 +193,7 @@ public class MainActivity extends Activity implements
             @Override
             public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
                 try {
-                    rangebar.setTicks(rangebar.getTickStart(), rangebar.getTickEnd(), progress + 2);
+                    rangebar.setTicks(progress + 2);
                 } catch (IllegalArgumentException e) {
                 }
                 tickCount.setText("Tick Count = " + (progress + 2));

@@ -65,8 +65,6 @@ public abstract class AbsRangeBar extends View {
 	private static final String TAG = "RangeBar";
 
 	// Default values for variables
-	private static final float DEFAULT_TICK_START = 0f;
-	private static final float DEFAULT_TICK_END = 5f;
 	private static final int DEFAULT_TICK_COUNT = 6;
 	private static final float DEFAULT_TICK_SIZE_DP = 1;
 	private static final float DEFAULT_PIN_PADDING_DP = 16;
@@ -96,8 +94,6 @@ public abstract class AbsRangeBar extends View {
 	// Ticks
 	private float mTickSize;
 	private int mTickColor;
-	private float mTickStart;
-	private float mTickEnd;
 	private int mTickCount;
 	private boolean mDrawTicks = true;
 
@@ -171,11 +167,9 @@ public abstract class AbsRangeBar extends View {
 
 		try {
 			// Sets the values of the user-defined attributes based on the XML attributes.
-			mTickStart = ta.getFloat(R.styleable.AbsRangeBar_tickStart, DEFAULT_TICK_START);
-			mTickEnd = ta.getFloat(R.styleable.AbsRangeBar_tickEnd, DEFAULT_TICK_END);
 			mTickCount = ta.getInt(R.styleable.AbsRangeBar_tickCount, DEFAULT_TICK_COUNT);
 			validateTickCount();
-			mPinIndex = new int[]{0, mTickCount - 1};
+			mPinIndex = new int[] { 0, mTickCount - 1 };
 
 			if (mListener != null) {
 				mListener.onRangeChangeListener(this, mPinIndex);
@@ -235,14 +229,13 @@ public abstract class AbsRangeBar extends View {
 
 		bundle.putParcelable("instanceState", super.onSaveInstanceState());
 
-		bundle.putFloat("TICK_START", mTickStart);
-		bundle.putFloat("TICK_END", mTickEnd);
-		bundle.putInt("TICK_COUNT", mTickCount);
-		bundle.putInt("TICK_COLOR", mTickColor);
-
-		bundle.putFloat("TICK_SIZE", mTickSize);
 		bundle.putFloat("BAR_WEIGHT", mBarWeight);
 		bundle.putInt("BAR_COLOR", mBarColor);
+
+		bundle.putInt("TICK_COUNT", mTickCount);
+		bundle.putInt("TICK_COLOR", mTickColor);
+		bundle.putFloat("TICK_SIZE", mTickSize);
+
 		bundle.putFloat("CONNECTING_LINE_WEIGHT", mConnectingLineWeight);
 		bundle.putInt("CONNECTING_LINE_COLOR", mConnectingLineColor);
 
@@ -268,8 +261,6 @@ public abstract class AbsRangeBar extends View {
 
 			Bundle bundle = (Bundle) state;
 
-			mTickStart = bundle.getFloat("TICK_START");
-			mTickEnd = bundle.getFloat("TICK_END");
 			mTickCount = bundle.getInt("TICK_COUNT");
 			mTickColor = bundle.getInt("TICK_COLOR");
 			mTickSize = bundle.getFloat("TICK_SIZE");
@@ -499,29 +490,36 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Sets up the tick in the RangeBar.
+	 * Sets up the ticks in the RangeBar.
 	 *
-	 * @param start float specifying the leftmost value of the bar
-	 * @param end   float specifying the rightmost value of the bar
-	 * @param count int specifying the number of pins to display
+	 * @param count int specifying the number of ticks to display
 	 */
-	public void setTicks(float start, float end, int count) {
-		mTickStart = start;
-		mTickEnd = end;
+	public void setTicks(int count) {
 		mTickCount = count;
-		if (mTickStart > mTickEnd) {
-			float tmp = mTickStart;
-			mTickStart = mTickEnd;
-			mTickEnd = tmp;
-		}
 		validateTickCount();
 		clampPins();
 	}
 
 	private void clampPins() {
 		for (int i = 0; i < mPinIndex.length; i++) {
-			mPinIndex[i] = clampIndex(mPinIndex[i], 0, mTickCount - 1);
+			int tmp = clampIndex(mPinIndex[i], 0, mTickCount - 1);
+			setPinIndex(i, tmp);
+			getPointOfTick(mTmpPoint, tmp);
+			mPinView[i].setPosition(mTmpPoint);
 		}
+		invalidate();
+	}
+
+	private void setPinIndex(int index, int value) {
+		if (mPinIndex[index] == value) {
+			return;
+		}
+
+		mPinIndex[index] = value;
+		if (mListener != null) {
+			mListener.onRangeChangeListener(this, mPinIndex);
+		}
+
 	}
 
 	/**
@@ -584,6 +582,9 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setRangeBarEnabled(boolean isRangeBar) {
 		mIsRangeBar = isRangeBar;
+		if (!mIsRangeBar) {
+			setPinIndex(0, 0);
+		}
 		invalidate();
 	}
 
@@ -655,44 +656,12 @@ public abstract class AbsRangeBar extends View {
 	}
 
 	/**
-	 * Gets the value of the start tick.
-	 *
-	 * @return the start tick.
-	 */
-	public float getTickStart() {
-		return mTickStart;
-	}
-
-	/**
-	 * Gets the value of the end tick.
-	 *
-	 * @return the end tick.
-	 */
-	public float getTickEnd() {
-		return mTickEnd;
-	}
-
-	/**
 	 * Gets the tick count.
 	 *
 	 * @return the tick count
 	 */
 	public int getTickCount() {
 		return mTickCount;
-	}
-
-	/**
-	 * Sets the value of the pins of this range bar. Silently adjust to the bar's ticks.
-	 * Silently swaps left and right pins, if left is now greater than right.
-	 *
-	 * @param start
-	 * @param end
-	 */
-	public void setPinValues(float start, float end) {
-		setPinIndices(new int[] {
-			(int) ((start - mTickStart) / getTickInterval()),
-			(int) ((end - mTickStart) / getTickInterval())
-		});
 	}
 
 	/**
@@ -707,18 +676,6 @@ public abstract class AbsRangeBar extends View {
 		}
 		Arrays.sort(indices);
 		clampPins();
-		initPins();
-		invalidate();
-	}
-
-	/**
-	 * Sets the value of the left pin. Silently adjust to the bar's ticks.
-	 * Silently swaps left and right pins, if left is now greater than right.
-	 *
-	 * @param value
-	 */
-	public void setPinValue(float value) {
-		setPinIndex((int) ((value - mTickStart) / getTickInterval()));
 	}
 
 	/**
@@ -731,9 +688,10 @@ public abstract class AbsRangeBar extends View {
 		if (isRangeBar()) {
 			throw new RuntimeException("Cannot set single value on a Range Bar");
 		}
-		mPinIndex[1] = clampIndex(index, 0, mTickCount - 1);
-		initPins();
-		invalidate();
+		setPinIndex(0, 0);
+		setPinIndex(1, index);
+		Arrays.sort(mPinIndex);
+		clampPins();
 	}
 
 	private int clampIndex(int index, int min, int max) {
@@ -767,15 +725,6 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public int getRightIndex() {
 		return mPinIndex[1];
-	}
-
-	/**
-	 * Gets the tick interval.
-	 *
-	 * @return the tick interval
-	 */
-	public float getTickInterval() {
-		return (mTickEnd - mTickStart) / (mTickCount - 1);
 	}
 
 	@Override
