@@ -478,6 +478,7 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setValueFormatter(ValueFormatter formatter) {
 		this.mValueFormatter = formatter;
+		invalidate();
 	}
 
 	/**
