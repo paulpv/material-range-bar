@@ -517,6 +517,8 @@ public abstract class AbsRangeBar extends View {
 		}
 
 		mPinIndex[index] = value;
+		clampPins();
+		
 		if (mListener != null) {
 			mListener.onRangeChangeListener(this, mPinIndex);
 		}
@@ -676,6 +678,7 @@ public abstract class AbsRangeBar extends View {
 			throw new RuntimeException("Cannot set multiple values on a non Range Bar");
 		}
 		Arrays.sort(indices);
+		mPinIndex = indices;
 		clampPins();
 	}
 

@@ -258,6 +258,7 @@ public class MainActivity extends Activity implements
 	@OnClick(R.id.enableRange)
 	public void buttonEnableRange(View v) {
 		vRangeBar.setRangeBarEnabled(!vRangeBar.isRangeBar());
+		vLeftIndex.setEnabled(vRangeBar.isRangeBar());
 	}
 
 	@OnClick(R.id.disable)
@@ -270,9 +271,7 @@ public class MainActivity extends Activity implements
 		String leftIndex = vLeftIndex.getText().toString();
 		String rightIndex = vRightIndex.getText().toString();
 
-		// Catches any IllegalArgumentExceptions; if fails, should throw
-		// a dialog warning the user
-		try {
+		if (vRangeBar.isRangeBar()) {
 			if (!leftIndex.isEmpty() && !rightIndex.isEmpty()) {
 				vRangeBar.setPinIndices(new int[] {
 					Integer.parseInt(leftIndex),
@@ -280,10 +279,11 @@ public class MainActivity extends Activity implements
 				});
 			}
 		}
-		catch (IllegalArgumentException e) {
+		else {
+			if (!rightIndex.isEmpty()) {
+				vRangeBar.setPinIndex(Integer.parseInt(rightIndex));
+			}
 		}
-
-		vRangeBar.setPinIndices(new int[] {});
 	}
 
 	@OnClick(R.id.buttonUseIntLabels)
