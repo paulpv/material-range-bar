@@ -2,6 +2,7 @@
 package com.dgmltn.ranger.demo;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -212,6 +213,20 @@ public class MainActivity extends Activity implements
 		});
 
 		// Setting Color Attributes---------------------------------
+
+        if (false) {
+            vRangeBar.setConnectingLineInverted(true);
+
+            vRangeBar.setLeftConnectingLineColor(Color.BLUE);
+            vRangeBar.setLeftPinColor(Color.BLUE);
+            vRangeBar.setLeftSelectorColor(Color.BLUE);
+            vRangeBar.setLeftPinTextColor(Color.WHITE);
+
+            vRangeBar.setRightConnectingLineColor(Color.RED);
+            vRangeBar.setRightPinColor(Color.RED);
+            vRangeBar.setRightSelectorColor(Color.RED);
+            vRangeBar.setRightPinTextColor(Color.WHITE);
+        }
 
 		// Sets barColor
 		barColor.setOnClickListener(new View.OnClickListener() {

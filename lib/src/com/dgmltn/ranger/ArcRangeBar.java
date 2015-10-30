@@ -122,7 +122,7 @@ public class ArcRangeBar extends AbsRangeBar {
 
 	@Override
 	public void drawConnectingLine(Canvas canvas, PointF left, PointF right) {
-		if (mIsInverted) {
+		if (mConnectingLineInverted) {
 			float angle1;
 			float angle2;
 			float sweep;
@@ -130,17 +130,17 @@ public class ArcRangeBar extends AbsRangeBar {
 			angle1 = ARC_START;
 			angle2 = getAngle(left) + 720f;
 			sweep = (angle2 - angle1) % 360f;
-			ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mConnectingLinePaint);
+			ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mLeftConnectingLinePaint);
 
 			angle1 = getAngle(right);
 			angle2 = ARC_START + ARC_SWEEP + 720f;
 			sweep = (angle2 - angle1) % 360f;
-			ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mConnectingLinePaint);
+			ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mRightConnectingLinePaint);
 		} else {
 			float angle1 = getAngle(left);
 			float angle2 = getAngle(right) + 720f;
 			float sweep = (angle2 - angle1) % 360f;
-			ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mConnectingLinePaint);
+			ArcUtils.drawArc(canvas, mCenter, mRadius, angle1, sweep, mRightConnectingLinePaint);
 		}
 	}
 
