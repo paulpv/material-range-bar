@@ -98,35 +98,41 @@ public abstract class AbsRangeBar extends View {
 	private boolean mDrawTicks = true;
 
 	// Selectors
-	private int mSelectorColor;
+	private int mLeftSelectorColor;
+	private int mRightSelectorColor;
 	private float mSelectorSize;
 
 	// Pins
 	private PinView[] mPinView;
 	private int[] mPinIndex;
-	private int mPinColor;
+	private int mLeftPinColor;
+	private int mRightPinColor;
 	private float mPinRadius;
 	private float mExpandedPinRadius;
 	private float mMinPinFont;
 	private float mMaxPinFont;
 	private float mPinPadding;
-	private int mPinTextColor;
+	private int mLeftPinTextColor;
+	private int mRightPinTextColor;
 	private boolean mArePinsTemporary = true;
 
 	// Connecting Line
 	private float mConnectingLineWeight;
-	private int mConnectingLineColor;
+	protected int mLeftConnectingLineColor;
+	protected int mRightConnectingLineColor;
 
 	// Listeners
 	private OnRangeBarChangeListener mListener;
 
 	private boolean mIsRangeBar = true;
-	private int mActiveConnectingLineColor;
+	private int mActiveLeftConnectingLineColor;
+	private int mActiveRightConnectingLineColor;
 	private int mActiveBarColor;
 	private int mActiveTickColor;
-	private int mActiveCircleColor;
+	private int mActiveLeftCircleColor;
+	private int mActiveRightCircleColor;
 
-	protected boolean mIsInverted;
+	protected boolean mConnectingLineInverted;
 
 	private ValueFormatter mValueFormatter = new ValueFormatter() {
 		@Override
@@ -184,24 +190,40 @@ public abstract class AbsRangeBar extends View {
 				DEFAULT_BAR_WEIGHT_DP * density);
 			mBarColor = ta.getColor(R.styleable.AbsRangeBar_rangeBarColor,
 				DEFAULT_BAR_COLOR);
-			mPinTextColor = ta.getColor(R.styleable.AbsRangeBar_textColor,
-				DEFAULT_TEXT_COLOR);
-			mPinColor = ta.getColor(R.styleable.AbsRangeBar_pinColor,
-				DEFAULT_PIN_COLOR);
 			mActiveBarColor = mBarColor;
+
+			int pinTextColor = ta.getColor(R.styleable.AbsRangeBar_textColor,
+				DEFAULT_TEXT_COLOR);
+            mLeftPinTextColor = pinTextColor;
+            mRightPinTextColor = pinTextColor;
+
+			int pinColor = ta.getColor(R.styleable.AbsRangeBar_pinColor,
+				DEFAULT_PIN_COLOR);
+            mLeftPinColor = pinColor;
+            mRightPinColor = pinColor;
+
 			mSelectorSize = ta.getDimension(R.styleable.AbsRangeBar_selectorSize,
 				DEFAULT_CIRCLE_SIZE_DP * density);
-			mSelectorColor = ta.getColor(R.styleable.AbsRangeBar_selectorColor,
+			int selectorColor = ta.getColor(R.styleable.AbsRangeBar_selectorColor,
 				DEFAULT_CONNECTING_LINE_COLOR);
-			mActiveCircleColor = mSelectorColor;
+            mLeftSelectorColor = selectorColor;
+            mRightSelectorColor = selectorColor;
+			mActiveLeftCircleColor = selectorColor;
+			mActiveRightCircleColor = selectorColor;
+
 			mTickColor = ta.getColor(R.styleable.AbsRangeBar_tickColor,
 				DEFAULT_TICK_COLOR);
 			mActiveTickColor = mTickColor;
 			mConnectingLineWeight = ta.getDimension(R.styleable.AbsRangeBar_connectingLineWeight,
 				DEFAULT_CONNECTING_LINE_WEIGHT_DP * density);
-			mConnectingLineColor = ta.getColor(R.styleable.AbsRangeBar_connectingLineColor,
+
+			int connectingLineColor = ta.getColor(R.styleable.AbsRangeBar_connectingLineColor,
 				DEFAULT_CONNECTING_LINE_COLOR);
-			mActiveConnectingLineColor = mConnectingLineColor;
+            mLeftConnectingLineColor = connectingLineColor;
+            mRightConnectingLineColor = connectingLineColor;
+			mActiveLeftConnectingLineColor = connectingLineColor;
+			mActiveRightConnectingLineColor = connectingLineColor;
+
 			mExpandedPinRadius = ta.getDimension(R.styleable.AbsRangeBar_pinRadius,
 				DEFAULT_EXPANDED_PIN_RADIUS_DP * density);
 			mPinPadding = ta.getDimension(R.styleable.AbsRangeBar_pinPadding,
@@ -239,10 +261,12 @@ public abstract class AbsRangeBar extends View {
 		bundle.putFloat("TICK_SIZE", mTickSize);
 
 		bundle.putFloat("CONNECTING_LINE_WEIGHT", mConnectingLineWeight);
-		bundle.putInt("CONNECTING_LINE_COLOR", mConnectingLineColor);
+		bundle.putInt("LEFT_CONNECTING_LINE_COLOR", mLeftConnectingLineColor);
+		bundle.putInt("RIGHT_CONNECTING_LINE_COLOR", mRightConnectingLineColor);
 
 		bundle.putFloat("SELECTOR_SIZE", mSelectorSize);
-		bundle.putInt("SELECTOR_COLOR", mSelectorColor);
+		bundle.putInt("LEFT_SELECTOR_COLOR", mLeftSelectorColor);
+		bundle.putInt("RIGHT_SELECTOR_COLOR", mRightSelectorColor);
 		bundle.putFloat("PIN_RADIUS", mPinRadius);
 		bundle.putFloat("EXPANDED_PIN_RADIUS", mExpandedPinRadius);
 		bundle.putFloat("PIN_PADDING", mPinPadding);
@@ -269,9 +293,11 @@ public abstract class AbsRangeBar extends View {
 			mBarWeight = bundle.getFloat("BAR_WEIGHT");
 			mBarColor = bundle.getInt("BAR_COLOR");
 			mSelectorSize = bundle.getFloat("SELECTOR_SIZE");
-			mSelectorColor = bundle.getInt("SELECTOR_COLOR");
+			mLeftSelectorColor = bundle.getInt("LEFT_SELECTOR_COLOR");
+			mRightSelectorColor = bundle.getInt("RIGHT_SELECTOR_COLOR");
 			mConnectingLineWeight = bundle.getFloat("CONNECTING_LINE_WEIGHT");
-			mConnectingLineColor = bundle.getInt("CONNECTING_LINE_COLOR");
+			mLeftConnectingLineColor = bundle.getInt("LEFT_CONNECTING_LINE_COLOR");
+			mRightConnectingLineColor = bundle.getInt("RIGHT_CONNECTING_LINE_COLOR");
 
 			mPinRadius = bundle.getFloat("PIN_RADIUS");
 			mExpandedPinRadius = bundle.getFloat("EXPANDED_PIN_RADIUS");
@@ -566,8 +592,30 @@ public abstract class AbsRangeBar extends View {
 	 * @param pinColor Integer specifying the color of the pin.
 	 */
 	public void setPinColor(int pinColor) {
-		mPinColor = pinColor;
-		initPins();
+		setLeftPinColor(pinColor, false);
+		setRightPinColor(pinColor, true);
+	}
+
+	public void setLeftPinColor(int pinColor) {
+		setLeftPinColor(pinColor, true);
+    }
+
+    protected void setLeftPinColor(int pinColor, boolean invalidate) {
+		mLeftPinColor = pinColor;
+        if (invalidate) {
+            initPins();
+        }
+	}
+
+	public void setRightPinColor(int pinColor) {
+        setRightPinColor(pinColor, true);
+    }
+
+    protected void setRightPinColor(int pinColor, boolean invalidate) {
+		mRightPinColor = pinColor;
+        if (invalidate) {
+            initPins();
+        }
 	}
 
 	/**
@@ -576,8 +624,30 @@ public abstract class AbsRangeBar extends View {
 	 * @param textColor Integer specifying the color of the text in the pin.
 	 */
 	public void setPinTextColor(int textColor) {
-		mPinTextColor = textColor;
-		initPins();
+        setLeftPinTextColor(textColor, false);
+        setRightPinTextColor(textColor, true);
+	}
+
+	public void setLeftPinTextColor(int textColor) {
+		setLeftPinTextColor(textColor, true);
+    }
+
+    protected void setLeftPinTextColor(int textColor, boolean invalidate) {
+		mLeftPinTextColor = textColor;
+        if (invalidate) {
+            initPins();
+        }
+	}
+
+	public void setRightPinTextColor(int textColor) {
+        setRightPinTextColor(textColor, true);
+    }
+
+	protected void setRightPinTextColor(int textColor, boolean invalidate) {
+		mRightPinTextColor = textColor;
+        if (invalidate) {
+            initPins();
+        }
 	}
 
 	/**
@@ -621,8 +691,30 @@ public abstract class AbsRangeBar extends View {
 	 * @param selectorColor Integer specifying the color of the ticks.
 	 */
 	public void setSelectorColor(int selectorColor) {
-		mSelectorColor = selectorColor;
-		initPins();
+		setLeftSelectorColor(selectorColor, false);
+		setRightSelectorColor(selectorColor, true);
+	}
+
+	public void setLeftSelectorColor(int selectorColor) {
+		setLeftSelectorColor(selectorColor, true);
+	}
+
+	protected void setLeftSelectorColor(int selectorColor, boolean invalidate) {
+		mLeftSelectorColor = selectorColor;
+        if (invalidate) {
+            initPins();
+        }
+	}
+
+	public void setRightSelectorColor(int selectorColor) {
+        setRightSelectorColor(selectorColor, true);
+	}
+
+	protected void setRightSelectorColor(int selectorColor, boolean invalidate) {
+		mRightSelectorColor = selectorColor;
+        if (invalidate) {
+            initPins();
+        }
 	}
 
 	/**
@@ -633,7 +725,8 @@ public abstract class AbsRangeBar extends View {
 	 */
 	public void setConnectingLineWeight(float connectingLineWeight) {
 		mConnectingLineWeight = connectingLineWeight;
-		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
+		mLeftConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
+		mRightConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 		invalidate();
 	}
 
@@ -644,9 +737,32 @@ public abstract class AbsRangeBar extends View {
 	 *                            line.
 	 */
 	public void setConnectingLineColor(int connectingLineColor) {
-		mConnectingLineColor = connectingLineColor;
-		mConnectingLinePaint.setColor(mConnectingLineColor);
-		invalidate();
+		setLeftConnectingLineColor(connectingLineColor, true);
+		setRightConnectingLineColor(connectingLineColor, false);
+	}
+
+	public void setLeftConnectingLineColor(int connectingLineColor) {
+		setLeftConnectingLineColor(connectingLineColor, true);
+	}
+
+	protected void setLeftConnectingLineColor(int connectingLineColor, boolean invalidate) {
+		mLeftConnectingLineColor = connectingLineColor;
+		mLeftConnectingLinePaint.setColor(mLeftConnectingLineColor);
+        if (invalidate) {
+            invalidate();
+        }
+	}
+
+	public void setRightConnectingLineColor(int connectingLineColor) {
+		setRightConnectingLineColor(connectingLineColor, true);
+	}
+
+	protected void setRightConnectingLineColor(int connectingLineColor, boolean invalidate) {
+		mRightConnectingLineColor = connectingLineColor;
+		mRightConnectingLinePaint.setColor(mRightConnectingLineColor);
+        if (invalidate) {
+            invalidate();
+        }
 	}
 
 	/**
@@ -737,29 +853,35 @@ public abstract class AbsRangeBar extends View {
 	public void setEnabled(boolean enabled) {
 		if (!enabled) {
 			mBarColor = DEFAULT_BAR_COLOR;
-			mConnectingLineColor = DEFAULT_BAR_COLOR;
-			mSelectorColor = DEFAULT_BAR_COLOR;
+			mLeftConnectingLineColor = DEFAULT_BAR_COLOR;
+			mRightConnectingLineColor = DEFAULT_BAR_COLOR;
+			mLeftSelectorColor = DEFAULT_BAR_COLOR;
+			mRightSelectorColor = DEFAULT_BAR_COLOR;
 			mTickColor = DEFAULT_BAR_COLOR;
 		}
 		else {
 			mBarColor = mActiveBarColor;
-			mConnectingLineColor = mActiveConnectingLineColor;
-			mSelectorColor = mActiveCircleColor;
+			mLeftConnectingLineColor = mActiveLeftConnectingLineColor;
+			mRightConnectingLineColor = mActiveRightConnectingLineColor;
+			mLeftSelectorColor = mActiveLeftCircleColor;
+			mRightSelectorColor = mActiveRightCircleColor;
 			mTickColor = mActiveTickColor;
 		}
 
 		mBarPaint.setColor(mBarColor);
 		mBarPaint.setStrokeWidth(mBarWeight);
 		mTickPaint.setColor(mTickColor);
-		mConnectingLinePaint.setColor(mConnectingLineColor);
-		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
+		mLeftConnectingLinePaint.setColor(mLeftConnectingLineColor);
+		mLeftConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
+		mRightConnectingLinePaint.setColor(mRightConnectingLineColor);
+		mRightConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 
 		initPins();
 		super.setEnabled(enabled);
 	}
 
-    public void setIsInverted(boolean isInverted) {
-        mIsInverted = isInverted;
+    public void setConnectingLineInverted(boolean connectingLineInverted) {
+		mConnectingLineInverted = connectingLineInverted;
     }
 
     // Private Methods /////////////////////////////////////////////////////////
@@ -782,8 +904,8 @@ public abstract class AbsRangeBar extends View {
 			}
 			Arrays.sort(mPinIndex);
 			mPinView[0].init(leftPoint,
-				0, mPinColor, mPinTextColor,
-				mSelectorSize, mSelectorColor,
+				0, mLeftPinColor, mLeftPinTextColor,
+				mSelectorSize, mLeftSelectorColor,
 				mMinPinFont, mMaxPinFont);
 			mPinView[0].setLabel(getPinLabel(mPinIndex[0]));
 		}
@@ -794,8 +916,8 @@ public abstract class AbsRangeBar extends View {
 			mPinView[1] = new PinView(ctx);
 		}
 		mPinView[1].init(rightPoint,
-			0, mPinColor, mPinTextColor,
-			mSelectorSize, mSelectorColor,
+			0, mRightPinColor, mRightPinTextColor,
+			mSelectorSize, mRightSelectorColor,
 			mMinPinFont, mMaxPinFont);
 		mPinView[1].setLabel(getPinLabel(mPinIndex[1]));
 
@@ -969,7 +1091,8 @@ public abstract class AbsRangeBar extends View {
 
 	protected Paint mBarPaint;
 	protected Paint mTickPaint;
-	protected Paint mConnectingLinePaint;
+	protected Paint mLeftConnectingLinePaint;
+	protected Paint mRightConnectingLinePaint;
 
 	PointF mTmpPoint;
 
@@ -986,12 +1109,19 @@ public abstract class AbsRangeBar extends View {
 		mTickPaint.setColor(mTickColor);
 
 		// Initialize the paint, set values
-		mConnectingLinePaint = new Paint();
-		mConnectingLinePaint.setStrokeCap(Paint.Cap.ROUND);
-		mConnectingLinePaint.setStyle(Paint.Style.STROKE);
-		mConnectingLinePaint.setAntiAlias(true);
-		mConnectingLinePaint.setColor(mConnectingLineColor);
-		mConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
+		mLeftConnectingLinePaint = new Paint();
+		mLeftConnectingLinePaint.setStrokeCap(Paint.Cap.ROUND);
+		mLeftConnectingLinePaint.setStyle(Paint.Style.STROKE);
+		mLeftConnectingLinePaint.setAntiAlias(true);
+		mLeftConnectingLinePaint.setColor(mLeftConnectingLineColor);
+		mLeftConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
+
+		mRightConnectingLinePaint = new Paint();
+		mRightConnectingLinePaint.setStrokeCap(Paint.Cap.ROUND);
+		mRightConnectingLinePaint.setStyle(Paint.Style.STROKE);
+		mRightConnectingLinePaint.setAntiAlias(true);
+		mRightConnectingLinePaint.setColor(mRightConnectingLineColor);
+		mRightConnectingLinePaint.setStrokeWidth(mConnectingLineWeight);
 
 		mTmpPoint = new PointF();
 	}

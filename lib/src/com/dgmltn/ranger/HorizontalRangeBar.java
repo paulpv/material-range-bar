@@ -78,12 +78,11 @@ public class HorizontalRangeBar extends AbsRangeBar {
 
 	@Override
 	public void drawConnectingLine(Canvas canvas, PointF left, PointF right) {
-		if (mIsInverted) {
-			canvas.drawLine(mLeftX, mY, left.x, mY, mConnectingLinePaint);
-			canvas.drawLine(right.x, mY, mRightX, mY, mConnectingLinePaint);
-		}
-		else {
-			canvas.drawLine(left.x, mY, right.x, mY, mConnectingLinePaint);
+		if (mConnectingLineInverted) {
+			canvas.drawLine(mLeftX, mY, left.x, mY, mLeftConnectingLinePaint);
+			canvas.drawLine(right.x, mY, mRightX, mY, mRightConnectingLinePaint);
+		} else {
+			canvas.drawLine(left.x, mY, right.x, mY, mRightConnectingLinePaint);
 		}
 	}
 
