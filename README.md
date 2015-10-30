@@ -123,7 +123,7 @@ Installation
 
 ```groovy
 dependencies {
-    compile 'com.appyvet:materialrangebar:1.1'
+    compile 'com.appyvet:materialrangebar:1.2'
 }
 ```
 
