@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 version = "1.1"
-group = "com.dgmltn"
+group = "com.swooby"
 
 android {
 
@@ -28,4 +28,23 @@ repositories {
 
 dependencies {
     compile 'com.android.support:support-v4:23.1.0'
+}
+
+apply plugin: 'maven'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: project.MAVEN_ARTIFACT_SERVER_REPO_RELEASE) {
+                authentication(
+                        userName: project.MAVEN_ARTIFACT_USERNAME,
+                        password: project.MAVEN_ARTIFACT_PASSWORD)
+            }
+            snapshotRepository(url: project.MAVEN_ARTIFACT_REPO_SNAPSHOT) {
+                authentication(
+                        userName: project.MAVEN_ARTIFACT_USERNAME,
+                        password: project.MAVEN_ARTIFACT_PASSWORD)
+            }
+        }
+    }
 }
