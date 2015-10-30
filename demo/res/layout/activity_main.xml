@@ -1,8 +1,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mylayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -14,7 +13,7 @@
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="130dp"
+        android:layout_height="80dp"
         android:background="@color/primary"
         android:gravity="center"
         android:text="@string/title"
@@ -33,7 +32,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingLeft="16dp"
             android:paddingRight="16dp">
@@ -47,11 +46,28 @@
                 android:paddingBottom="8dp"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:paddingTop="32dp"
+                android:paddingTop="16dp"
                 app:pinMaxFont="10sp"
-                app:tickEnd="10"
                 app:tickCount="6"
+                app:tickEnd="10"
                 app:tickStart="5" />
+
+            <!--
+            <com.dgmltn.ranger.HorizontalRangeBar
+                android:id="@+id/rangebar1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:paddingBottom="8dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="16dp"
+                app:pinMaxFont="10sp"
+                app:tickCount="6"
+                app:tickEnd="10"
+                app:tickStart="5" />
+                -->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -73,7 +89,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:text="➡"/>
+                    android:text="➡" />
 
 
                 <EditText
@@ -92,7 +108,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:layout_weight="1"
-                    android:text="Set by Index"/>
+                    android:text="Set by Index" />
 
             </LinearLayout>
 
@@ -108,7 +124,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:layout_weight="1"
-                    android:text="@string/Use_Integer_labels"/>
+                    android:text="@string/Use_Integer_labels" />
 
                 <Button
                     android:id="@+id/buttonUseFloatLabels"
@@ -116,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:layout_weight="1"
-                    android:text="@string/Use_Float_labels"/>
+                    android:text="@string/Use_Float_labels" />
 
                 <Button
                     android:id="@+id/buttonUseCharLabels"
@@ -124,7 +140,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:layout_weight="1"
-                    android:text="@string/Use_Char_labels"/>
+                    android:text="@string/Use_Char_labels" />
 
             </LinearLayout>
 
@@ -138,10 +154,10 @@
                     android:id="@+id/enableRange"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:layout_gravity="center"
                     android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
+                    android:layout_weight="1"
                     android:gravity="center_vertical|center_horizontal"
                     android:text="@string/toggle_range"
                     android:textSize="16sp" />
@@ -150,10 +166,10 @@
                     android:id="@+id/disable"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:layout_gravity="center"
                     android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
+                    android:layout_weight="1"
                     android:gravity="center_vertical|center_horizontal"
                     android:text="@string/Disable"
                     android:textSize="16sp" />

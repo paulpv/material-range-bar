@@ -25,9 +25,6 @@ package com.dgmltn.ranger.internal;
  * governing permissions and limitations under the License.
  */
 
-import java.util.Arrays;
-import java.util.Comparator;
-
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -44,6 +41,9 @@ import android.view.ViewParent;
 
 import com.dgmltn.ranger.PinView;
 import com.dgmltn.ranger.R;
+
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * The MaterialRangeBar is a single or double-sided version of a {@link android.widget.SeekBar}
@@ -125,6 +125,8 @@ public abstract class AbsRangeBar extends View {
 	private int mActiveBarColor;
 	private int mActiveTickColor;
 	private int mActiveCircleColor;
+
+	protected boolean mIsInverted;
 
 	private ValueFormatter mValueFormatter = new ValueFormatter() {
 		@Override
@@ -756,7 +758,11 @@ public abstract class AbsRangeBar extends View {
 		super.setEnabled(enabled);
 	}
 
-	// Private Methods /////////////////////////////////////////////////////////
+    public void setIsInverted(boolean isInverted) {
+        mIsInverted = isInverted;
+    }
+
+    // Private Methods /////////////////////////////////////////////////////////
 
 	/**
 	 * Initializes (and creates if necessary) the one or two Pins.
@@ -1113,5 +1119,4 @@ public abstract class AbsRangeBar extends View {
 	public interface ValueFormatter {
 		String getLabel(int index);
 	}
-
 }
