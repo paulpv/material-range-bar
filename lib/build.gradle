@@ -1,7 +1,9 @@
 apply plugin: 'com.android.library'
 
-version = "1.1"
+version = "1.1.0"
 group = "com.swooby"
+archivesBaseName = "paulpv-android-material-range-bar"
+description = "Material Range Bar for Android"
 
 android {
 
@@ -35,15 +37,15 @@ apply plugin: 'maven'
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: project.MAVEN_ARTIFACT_SERVER_REPO_RELEASE) {
+            repository(url: project.MAVEN_ARTIFACT_SERVER_REPO_RELEASE_LOCAL) {
                 authentication(
-                        userName: project.MAVEN_ARTIFACT_USERNAME,
-                        password: project.MAVEN_ARTIFACT_PASSWORD)
+                        userName: project.MAVEN_ARTIFACT_SERVER_USERNAME,
+                        password: project.MAVEN_ARTIFACT_SERVER_PASSWORD)
             }
-            snapshotRepository(url: project.MAVEN_ARTIFACT_REPO_SNAPSHOT) {
+            snapshotRepository(url: project.MAVEN_ARTIFACT_SERVER_REPO_SNAPSHOT_LOCAL) {
                 authentication(
-                        userName: project.MAVEN_ARTIFACT_USERNAME,
-                        password: project.MAVEN_ARTIFACT_PASSWORD)
+                        userName: project.MAVEN_ARTIFACT_SERVER_USERNAME,
+                        password: project.MAVEN_ARTIFACT_SERVER_PASSWORD)
             }
         }
     }
