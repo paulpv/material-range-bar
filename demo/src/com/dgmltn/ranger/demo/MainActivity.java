@@ -120,6 +120,8 @@ public class MainActivity extends Activity implements
                 vRightIndex.setText(Integer.toString(secondIndex));
 			}
 		});
+        vLeftIndex.setText(Integer.toString(vRangeBar.getFirstIndex()));
+        vRightIndex.setText(Integer.toString(vRangeBar.getSecondIndex()));
 
 		// Setting Number Attributes -------------------------------
 

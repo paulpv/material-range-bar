@@ -21,9 +21,7 @@
     <string name="confirmDefaultColor">Default</string>
     <string name="colorPickerTitle">Select a Color</string>
     <string name="resetThumbColors">Reset Thumb Colors</string>
-    <string name="leftIndexValue">0</string>
     <string name="leftIndex">Left</string>
-    <string name="rightIndexValue">6</string>
     <string name="rightIndex">Right</string>
     <string name="indexSet">Set By Index</string>
     <string name="valueSet">Set By Value</string>

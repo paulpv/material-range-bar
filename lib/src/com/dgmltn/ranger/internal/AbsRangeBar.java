@@ -814,19 +814,22 @@ public abstract class AbsRangeBar extends View {
         getPointOfIndex(indexMax, pointMax);
         //PbLog.e(TAG, "setPinIndex: pointMax=" + pointMax);
 
-        boolean allowed = comparePointsOnBar(pointMin, pointIndex) <= 0 &&
-                comparePointsOnBar(pointIndex, pointMax) <= 0;
-        //PbLog.e(TAG, "setPinIndex: allowed=" + allowed);
-
-        boolean changed = allowed && pinView.setIndex(index);
+        boolean changed = false;
+        if (comparePointsOnBar(pointMin, pointIndex) > 0) {
+            pointIndex = pointMin;
+            index = indexMin;
+        } else if (comparePointsOnBar(pointIndex, pointMax) > 0) {
+            pointIndex = pointMax;
+            index = indexMax;
+        } else {
+            changed = pinView.setIndex(index);
+        }
         //PbLog.e(TAG, "setPinIndex: changed=" + changed);
 
-        if (allowed) {
-            movePin(pinView, pointIndex);
+        movePin(pinView, pointIndex);
 
-            String label = getPinLabel(index);
-            pinView.setLabel(label);
-        }
+        String label = getPinLabel(index);
+        pinView.setLabel(label);
 
         if (changed) {
             if (mListener != null) {
@@ -885,6 +888,9 @@ public abstract class AbsRangeBar extends View {
         if (resetIndexes) {
             mFirstPinView.setIndex(0);
             mSecondPinView.setIndex(mTickCount - 1);
+            if (mListener != null) {
+                mListener.onRangeChangeListener(this, mFirstPinView.getIndex(), mSecondPinView.getIndex());
+            }
         }
 
         if (!mArePinsTemporary) {
