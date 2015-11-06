@@ -32,237 +32,269 @@ import com.dgmltn.ranger.internal.IRangeBarFormatter;
  * that is pressed and slid.
  */
 public class PinView extends View {
+    //private static final String TAG = PbLog.TAG("PinView");
 
-	// Private Constants ///////////////////////////////////////////////////////
+    // Private Constants ///////////////////////////////////////////////////////
 
-	// The radius (in dp) of the touchable area around the thumb. We are basing
-	// this value off of the recommended 48dp Rhythm. See:
-	// http://developer.android.com/design/style/metrics-grids.html#48dp-rhythm
-	private static final float MINIMUM_TARGET_RADIUS_DP = 24;
+    // The radius (in dp) of the touchable area around the thumb. We are basing
+    // this value off of the recommended 48dp Rhythm. See:
+    // http://developer.android.com/design/style/metrics-grids.html#48dp-rhythm
+    private static final float MINIMUM_TARGET_RADIUS_DP = 24;
 
-	// Sets the default values for radius, normal, pressed if circle is to be
-	// drawn but no value is given.
-	private static final float DEFAULT_THUMB_RADIUS_DP = 14;
+    // Sets the default values for radius, normal, pressed if circle is to be
+    // drawn but no value is given.
+    private static final float DEFAULT_THUMB_RADIUS_DP = 14;
 
-	// Member Variables ////////////////////////////////////////////////////////
+    // Member Variables ////////////////////////////////////////////////////////
 
-	// Radius (in pixels) of the touch area of the thumb.
-	private float mTargetRadiusPx;
+    private final String mName;
 
-	// Indicates whether this thumb is currently pressed and active.
-	private boolean mIsPressed = false;
+    // Radius (in pixels) of the touch area of the thumb.
+    private float mTargetRadiusPx;
 
-	// The current position of the thumb in the parent view.
-	private PointF mPosition;
+    // Indicates whether this thumb is currently pressed and active.
+    private boolean mIsPressed = false;
 
-	// mPaint to draw the thumbs if attributes are selected
+    // The current position of the thumb in the parent view.
+    private PointF mPosition;
 
-	private Paint mTextPaint;
+    // mPaint to draw the thumbs if attributes are selected
 
-	private Drawable mPin;
+    private Paint mTextPaint;
 
-	private String mLabel;
+    private Drawable mPin;
 
-	// Radius of the new thumb if selected
-	private int mPinRadiusPx;
+    private String mLabel;
 
-	private ColorFilter mPinFilter;
+    // Radius of the new thumb if selected
+    private int mPinRadiusPx;
 
-	private float mPinPadding;
+    private ColorFilter mPinFilter;
 
-	private float mTextYPadding;
+    private float mPinPadding;
 
-	private Rect mBounds = new Rect();
+    private float mTextYPadding;
 
-	private float mDensity;
+    private Rect mBounds = new Rect();
 
-	private Paint mCirclePaint;
+    private float mDensity;
 
-	private float mCircleRadiusPx;
+    private Paint mCirclePaint;
 
-	private IRangeBarFormatter formatter;
+    private float mCircleRadiusPx;
 
-	private float mMinPinFont = AbsRangeBar.DEFAULT_MIN_PIN_FONT_SP;
+    private IRangeBarFormatter mFormatter;
 
-	private float mMaxPinFont = AbsRangeBar.DEFAULT_MAX_PIN_FONT_SP;
+    private float mMinPinFont = AbsRangeBar.DEFAULT_MIN_PIN_FONT_SP;
 
-	// Constructors ////////////////////////////////////////////////////////////
+    private float mMaxPinFont = AbsRangeBar.DEFAULT_MAX_PIN_FONT_SP;
 
-	public PinView(Context context) {
-		super(context);
-	}
+    private int mIndex;
 
-	// Initialization //////////////////////////////////////////////////////////
+    // Constructors ////////////////////////////////////////////////////////////
 
-	public void setFormatter(IRangeBarFormatter mFormatter) {
-		this.formatter = mFormatter;
-	}
+    public PinView(Context context, String name) {
+        super(context);
+        mName = name;
+    }
 
-	/**
-	 * The view is created empty with a default constructor. Use init to set all the initial
-	 * variables for the pin
-	 *
-	 * @param position     The position of this point in its parent's view
-	 * @param pinRadiusDP  the initial size of the pin
-	 * @param pinColor     the color of the pin
-	 * @param textColor    the color of the value text in the pin
-	 * @param circleRadius the radius of the selector circle
-	 * @param circleColor  the color of the selector circle
-	 */
-	public void init(PointF position, float pinRadiusDP, int pinColor, int textColor,
-		float circleRadius, int circleColor, float minFont, float maxFont) {
+    @Override
+    public String toString() {
+        return mName + //'@' + Integer.toHexString(hashCode()) +
+                '{' +
+                "mIndex=" + mIndex +
+                ", mIsPressed=" + mIsPressed +
+                '}';
+    }
 
-		mPin = ContextCompat.getDrawable(getContext(), R.drawable.rotate);
+    // Initialization //////////////////////////////////////////////////////////
 
-		mPosition = position;
+    public void setFormatter(IRangeBarFormatter formatter) {
+        mFormatter = formatter;
+    }
 
-		mDensity = getResources().getDisplayMetrics().density;
-		mMinPinFont = minFont / mDensity;
-		mMaxPinFont = maxFont / mDensity;
+    /**
+     * The view is created empty with a default constructor. Use init to set all the initial
+     * variables for the pin
+     *
+     * @param position     The position of this point in its parent's view
+     * @param pinRadiusDP  the initial size of the pin
+     * @param pinColor     the color of the pin
+     * @param textColor    the color of the value text in the pin
+     * @param circleRadius the radius of the selector circle
+     * @param circleColor  the color of the selector circle
+     */
+    public void init(PointF position, float pinRadiusDP, int pinColor, int textColor,
+                     float circleRadius, int circleColor, float minFont, float maxFont) {
 
-		mPinPadding = (int) (15f * mDensity);
-		mCircleRadiusPx = circleRadius;
-		mTextYPadding = (int) (3.5f * mDensity);
-		mPinRadiusPx = (int) ((pinRadiusDP == -1 ? DEFAULT_THUMB_RADIUS_DP : pinRadiusDP) * mDensity);
+        mPin = ContextCompat.getDrawable(getContext(), R.drawable.rotate);
 
-		// Creates the paint and sets the Paint values
-		mTextPaint = new Paint();
-		mTextPaint.setColor(textColor);
-		mTextPaint.setAntiAlias(true);
-		mTextPaint.setTextSize(15f * mDensity);
+        mPosition = position;
 
-		// Creates the paint and sets the Paint values
-		mCirclePaint = new Paint();
-		mCirclePaint.setColor(circleColor);
-		mCirclePaint.setAntiAlias(true);
+        mDensity = getResources().getDisplayMetrics().density;
+        mMinPinFont = minFont / mDensity;
+        mMaxPinFont = maxFont / mDensity;
 
-		// Color filter for the selection pin
-		mPinFilter = new LightingColorFilter(pinColor, pinColor);
+        mPinPadding = (int) (15f * mDensity);
+        mCircleRadiusPx = circleRadius;
+        mTextYPadding = (int) (3.5f * mDensity);
+        mPinRadiusPx = (int) ((pinRadiusDP == -1 ? DEFAULT_THUMB_RADIUS_DP : pinRadiusDP) * mDensity);
 
-		// Sets the minimum touchable area, but allows it to expand based on image size
-		mTargetRadiusPx = Math.max(MINIMUM_TARGET_RADIUS_DP * mDensity, mPinRadiusPx);
-	}
+        // Creates the paint and sets the Paint values
+        mTextPaint = new Paint();
+        mTextPaint.setColor(textColor);
+        mTextPaint.setAntiAlias(true);
+        mTextPaint.setTextSize(15f * mDensity);
 
-	/**
-	 * Set the x-y position of the pin
-	 */
-	public void setPosition(PointF position) {
-		mPosition.set(position);
-	}
+        // Creates the paint and sets the Paint values
+        mCirclePaint = new Paint();
+        mCirclePaint.setColor(circleColor);
+        mCirclePaint.setAntiAlias(true);
 
-	/**
-	 * Get the x-y location of the pin
-	 *
-	 * @return PointF location of the pin
-	 */
-	public PointF getPosition() {
-		return mPosition;
-	}
+        // Color filter for the selection pin
+        mPinFilter = new LightingColorFilter(pinColor, pinColor);
 
-	/**
-	 * Set the label of the pin
-	 *
-	 * @param x String label of the pin
-	 */
-	public void setLabel(String x) {
-		mLabel = x;
-	}
+        // Sets the minimum touchable area, but allows it to expand based on image size
+        mTargetRadiusPx = Math.max(MINIMUM_TARGET_RADIUS_DP * mDensity, mPinRadiusPx);
+    }
 
-	/**
-	 * Determine if the pin is pressed
-	 *
-	 * @return true if is in pressed state
-	 * false otherwise
-	 */
-	@Override
-	public boolean isPressed() {
-		return mIsPressed;
-	}
+    public int getIndex() {
+        return mIndex;
+    }
 
-	/**
-	 * Sets the state of the pin to pressed
-	 */
-	public void press() {
-		mIsPressed = true;
-	}
+    public boolean setIndex(int index) {
+        //PbLog.e(TAG, this + " setIndex(" + index + ')');
+        if (index != mIndex) {
+            mIndex = index;
+            return true;
+        }
+        return false;
+    }
 
-	/**
-	 * Set size of the pin and padding for use when animating pin enlargement on press
-	 *
-	 * @param size    the size of the pin radius
-	 * @param padding the size of the padding
-	 */
-	public void setSize(float size, float padding) {
-		mPinPadding = (int) padding;
-		mPinRadiusPx = (int) size;
-		invalidate();
-	}
+    /**
+     * Set the x-y position of the pin
+     */
+    public void setPosition(PointF position) {
+        //PbLog.e(TAG, this + " setPosition(" + position + ')');
+        mPosition.set(position);
+    }
 
-	/**
-	 * Release the pin, sets pressed state to false
-	 */
-	public void release() {
-		mIsPressed = false;
-	}
+    /**
+     * Get the x-y location of the pin
+     *
+     * @return PointF location of the pin
+     */
+    public PointF getPosition() {
+        return mPosition;
+    }
 
-	/**
-	 * Determines if the input coordinate is close enough to this thumb to
-	 * consider it a press.
-	 *
-	 * @param x the x-coordinate of the user touch
-	 * @param y the y-coordinate of the user touch
-	 * @return true if the coordinates are within this thumb's target area;
-	 * false otherwise
-	 */
-	public boolean isInTargetZone(float x, float y) {
-		return (Math.abs(x - mPosition.x) <= mTargetRadiusPx
-			&& Math.abs(y - mPosition.y + mPinPadding) <= mTargetRadiusPx);
-	}
+    /**
+     * Set the label of the pin
+     *
+     * @param label String label of the pin
+     */
+    public void setLabel(String label) {
+        mLabel = label;
+    }
 
-	//Draw the circle regardless of pressed state. If pin size is >0 then also draw the pin and text
-	@Override
-	public void draw(Canvas canvas) {
-		super.draw(canvas);
+    /**
+     * Determine if the pin is pressed
+     *
+     * @return true if is in pressed state, otherwise false
+     */
+    @Override
+    public boolean isPressed() {
+        return mIsPressed;
+    }
 
-		canvas.drawCircle(mPosition.x, mPosition.y, mCircleRadiusPx, mCirclePaint);
-		//Draw pin if pressed
-		if (mPinRadiusPx > 0) {
-			mBounds.set((int) mPosition.x - mPinRadiusPx,
-				(int) mPosition.y - (mPinRadiusPx * 2) - (int) mPinPadding,
-				(int) mPosition.x + mPinRadiusPx, (int) mPosition.y - (int) mPinPadding);
-			mPin.setBounds(mBounds);
-			String text = mLabel;
+    /**
+     * Sets the state of the pin to pressed
+     */
+    public void press() {
+        mIsPressed = true;
+    }
 
-			if (this.formatter != null) {
-				text = formatter.format(text);
-			}
+    /**
+     * Release the pin, sets pressed state to false
+     */
+    public void release() {
+        mIsPressed = false;
+    }
 
-			calibrateTextSize(mTextPaint, text, mBounds.width());
-			mTextPaint.getTextBounds(text, 0, text.length(), mBounds);
-			mTextPaint.setTextAlign(Paint.Align.CENTER);
-			mPin.setColorFilter(mPinFilter);
-			mPin.draw(canvas);
-			canvas.drawText(text,
-				mPosition.x, mPosition.y - mPinRadiusPx - mPinPadding + mTextYPadding,
-				mTextPaint);
-		}
-	}
+    /**
+     * Determines if the input coordinate is close enough to this thumb to
+     * consider it a press.
+     *
+     * @param x the x-coordinate of the user touch
+     * @param y the y-coordinate of the user touch
+     * @return true if the coordinates are within this thumb's target area;
+     * false otherwise
+     */
+    public boolean isInTargetZone(float x, float y) {
+        //PbLog.e(TAG, this + " isInTargetZone(x=" + x + ", y=" + y + ')');
+        //PbLog.e(TAG, this + " isInTargetZone: mPosition=" + mPosition);
+        //PbLog.e(TAG, this + " isInTargetZone: mPinPadding=" + mPinPadding);
+        //PbLog.e(TAG, this + " isInTargetZone: mTargetRadiusPx=" + mTargetRadiusPx);
+        return (Math.abs(x - mPosition.x) <= mTargetRadiusPx &&
+                Math.abs(y - mPosition.y + mPinPadding) <= mTargetRadiusPx);
+    }
 
-	// Private Methods /////////////////////////////////////////////////////////////////
+    /**
+     * Set size of the pin and padding for use when animating pin enlargement on press
+     *
+     * @param size    the size of the pin radius
+     * @param padding the size of the padding
+     */
+    public void setSize(float size, float padding) {
+        mPinPadding = (int) padding;
+        mPinRadiusPx = (int) size;
+        invalidate();
+    }
 
-	//Set text size based on available pin width.
-	private void calibrateTextSize(Paint paint, String text, float boxWidth) {
-		paint.setTextSize(10);
+    //Draw the circle regardless of pressed state. If pin size is >0 then also draw the pin and text
+    @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
 
-		float textSize = paint.measureText(text);
-		float estimatedFontSize = boxWidth * 8 / textSize / mDensity;
+        canvas.drawCircle(mPosition.x, mPosition.y, mCircleRadiusPx, mCirclePaint);
 
-		if (estimatedFontSize < mMinPinFont) {
-			estimatedFontSize = mMinPinFont;
-		}
-		else if (estimatedFontSize > mMaxPinFont) {
-			estimatedFontSize = mMaxPinFont;
-		}
-		paint.setTextSize(estimatedFontSize * mDensity);
-	}
+        // Draw pin if pressed
+        if (mPinRadiusPx > 0) {
+            mBounds.set((int) mPosition.x - mPinRadiusPx,
+                    (int) mPosition.y - (mPinRadiusPx * 2) - (int) mPinPadding,
+                    (int) mPosition.x + mPinRadiusPx, (int) mPosition.y - (int) mPinPadding);
+            mPin.setBounds(mBounds);
+            String text = mLabel;
+
+            if (mFormatter != null) {
+                text = mFormatter.format(text);
+            }
+
+            calibrateTextSize(mTextPaint, text, mBounds.width());
+            mTextPaint.getTextBounds(text, 0, text.length(), mBounds);
+            mTextPaint.setTextAlign(Paint.Align.CENTER);
+            mPin.setColorFilter(mPinFilter);
+            mPin.draw(canvas);
+            canvas.drawText(text,
+                    mPosition.x, mPosition.y - mPinRadiusPx - mPinPadding + mTextYPadding,
+                    mTextPaint);
+        }
+    }
+
+    // Private Methods /////////////////////////////////////////////////////////////////
+
+    //Set text size based on available pin width.
+    private void calibrateTextSize(Paint paint, String text, float boxWidth) {
+        paint.setTextSize(10);
+
+        float textSize = paint.measureText(text);
+        float estimatedFontSize = boxWidth * 8 / textSize / mDensity;
+
+        if (estimatedFontSize < mMinPinFont) {
+            estimatedFontSize = mMinPinFont;
+        } else if (estimatedFontSize > mMaxPinFont) {
+            estimatedFontSize = mMaxPinFont;
+        }
+        paint.setTextSize(estimatedFontSize * mDensity);
+    }
 }

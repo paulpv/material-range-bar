@@ -12,81 +12,80 @@ import com.dgmltn.ranger.internal.AbsRangeBar;
  */
 public class HorizontalRangeBar extends AbsRangeBar {
 
-	// Endpoints of the horizontal bar
-	private float mLeftX;
-	private float mRightX;
+    // Endpoints of the horizontal bar
+    private float mLeftX;
+    private float mRightX;
 
-	// Y position of the horizontal bar
-	private float mY;
+    // Y position of the horizontal bar
+    private float mY;
 
-	// Constructor /////////////////////////////////////////////////////////////
+    // Constructor /////////////////////////////////////////////////////////////
 
-	public HorizontalRangeBar(Context context) {
-		super(context);
-	}
+    public HorizontalRangeBar(Context context) {
+        super(context);
+    }
 
-	public HorizontalRangeBar(Context context, AttributeSet attrs) {
-		super(context, attrs);
-	}
+    public HorizontalRangeBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
 
-	public HorizontalRangeBar(Context context, AttributeSet attrs, int defStyle) {
-		super(context, attrs, defStyle);
-	}
+    public HorizontalRangeBar(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
 
-	// Implementation /////////////////////////////////////////////////////////////
+    // Implementation /////////////////////////////////////////////////////////////
 
-	@Override
-	protected void resizeBar(int w, int h) {
-		super.resizeBar(w, h);
+    @Override
+    protected void resizeBar(int w, int h) {
+        super.resizeBar(w, h);
 
-		mLeftX = getPaddingLeft();
-		mRightX = getWidth() - getPaddingRight();
-		mY = getHeight() - getPaddingBottom();
-	}
+        mLeftX = getPaddingLeft();
+        mRightX = getWidth() - getPaddingRight();
+        mY = getHeight() - getPaddingBottom();
+    }
 
-	@Override
-	public int comparePointsOnBar(PointF point1, PointF point2) {
-		return Float.compare(point1.x, point2.x);
-	}
+    @Override
+    public int comparePointsOnBar(PointF point1, PointF point2) {
+        return Float.compare(point1.x, point2.x);
+    }
 
-	@Override
-	public void getNearestPointOnBar(PointF out, PointF point) {
-		out.set(Math.min(mRightX, Math.max(mLeftX, point.x)), mY);
-	}
+    @Override
+    public void getNearestPointOnBar(PointF pointIn, PointF pointOut) {
+        pointOut.set(Math.min(mRightX, Math.max(mLeftX, pointIn.x)), mY);
+    }
 
-	@Override
-	public void getPointOfTick(PointF out, int index) {
-		if (index == getTickCount() - 1) {
-			// Avoid any rounding discrepancies
-			out.set(mRightX, mY);
-		}
-		else {
-			out.set(index * getTickDistance() + mLeftX, mY);
-		}
-	}
+    @Override
+    public void getPointOfIndex(int index, PointF pointOut) {
+        if (index == getTickCount() - 1) {
+            // Avoid any rounding discrepancies
+            pointOut.set(mRightX, mY);
+        } else {
+            pointOut.set(mLeftX + (getTickDistance() * index), mY);
+        }
+    }
 
-	@Override
-	public int getNearestTickIndex(PointF point) {
-		float d = getTickDistance();
-		return (int) ((point.x - mLeftX + d / 2f) / d);
-	}
+    @Override
+    public int getNearestIndex(PointF point) {
+        float tickDistance = getTickDistance();
+        return (int) ((point.x - mLeftX + tickDistance / 2f) / tickDistance);
+    }
 
-	@Override
-	public void drawBar(Canvas canvas) {
-		canvas.drawLine(mLeftX, mY, mRightX, mY, mBarPaint);
-	}
+    @Override
+    public void drawBar(Canvas canvas) {
+        canvas.drawLine(mLeftX, mY, mRightX, mY, mBarPaint);
+    }
 
-	@Override
-	public void drawConnectingLine(Canvas canvas, PointF left, PointF right) {
-		if (mConnectingLineInverted) {
-			canvas.drawLine(mLeftX, mY, left.x, mY, mLeftConnectingLinePaint);
-			canvas.drawLine(right.x, mY, mRightX, mY, mRightConnectingLinePaint);
-		} else {
-			canvas.drawLine(left.x, mY, right.x, mY, mRightConnectingLinePaint);
-		}
-	}
+    @Override
+    public void drawConnectingLine(Canvas canvas, PointF left, PointF right) {
+        if (mConnectingLineInverted) {
+            canvas.drawLine(mLeftX, mY, left.x, mY, mFirstConnectingLinePaint);
+            canvas.drawLine(right.x, mY, mRightX, mY, mSecondConnectingLinePaint);
+        } else {
+            canvas.drawLine(left.x, mY, right.x, mY, mFirstConnectingLinePaint);
+        }
+    }
 
-	private float getTickDistance() {
-		return (mRightX - mLeftX) / (getTickCount() - 1);
-	}
+    private float getTickDistance() {
+        return (mRightX - mLeftX) / (getTickCount() - 1f);
+    }
 }

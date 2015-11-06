@@ -115,9 +115,9 @@ public class MainActivity extends Activity implements
 		// Sets the display values of the indices
 		vRangeBar.setOnRangeBarChangeListener(new AbsRangeBar.OnRangeBarChangeListener() {
 			@Override
-			public void onRangeChangeListener(AbsRangeBar rangeBar, int[] indices) {
-				vLeftIndex.setText(Integer.toString(indices[0]));
-				vRightIndex.setText(Integer.toString(indices[1]));
+            public void onRangeChangeListener(AbsRangeBar rangeBar, int firstIndex, int secondIndex) {
+                vLeftIndex.setText(Integer.toString(firstIndex));
+                vRightIndex.setText(Integer.toString(secondIndex));
 			}
 		});
 
@@ -131,9 +131,8 @@ public class MainActivity extends Activity implements
 			public void onProgressChanged(SeekBar tickCountSeek, int progress, boolean fromUser) {
 				int count = progress + 2;
 				try {
-					vRangeBar.setTicks(count);
-				}
-				catch (IllegalArgumentException e) {
+                    vRangeBar.setTickCount(count);
+                } catch (IllegalArgumentException e) {
 				}
 				tickCount.setText("Tick Count = " + count);
 			}
@@ -196,8 +195,7 @@ public class MainActivity extends Activity implements
 				if (progress == 0) {
 					vRangeBar.setPinRadius(-1);
 					thumbRadius.setText("Pin Radius = 30");
-				}
-				else {
+                } else {
 					vRangeBar.setPinRadius(progress);
 					thumbRadius.setText("Pin Radius = " + progress);
 				}
@@ -217,15 +215,17 @@ public class MainActivity extends Activity implements
         if (false) {
             vRangeBar.setConnectingLineInverted(true);
 
-            vRangeBar.setLeftConnectingLineColor(Color.BLUE);
-            vRangeBar.setLeftPinColor(Color.BLUE);
-            vRangeBar.setLeftSelectorColor(Color.BLUE);
-            vRangeBar.setLeftPinTextColor(Color.WHITE);
+            vRangeBar.setFirstConnectingLineColor(Color.BLUE);
+            vRangeBar.setFirstPinColor(Color.BLUE);
+            vRangeBar.setFirstSelectorColor(Color.BLUE);
+            vRangeBar.setFirstPinTextColor(Color.WHITE);
 
-            vRangeBar.setRightConnectingLineColor(Color.RED);
-            vRangeBar.setRightPinColor(Color.RED);
-            vRangeBar.setRightSelectorColor(Color.RED);
-            vRangeBar.setRightPinTextColor(Color.WHITE);
+            vRangeBar.setSecondConnectingLineColor(Color.RED);
+            vRangeBar.setSecondPinColor(Color.RED);
+            vRangeBar.setSecondSelectorColor(Color.RED);
+            vRangeBar.setSecondPinTextColor(Color.WHITE);
+
+            vRangeBar.setTemporaryPins(false);
         }
 
 		// Sets barColor
@@ -288,15 +288,12 @@ public class MainActivity extends Activity implements
 
 		if (vRangeBar.isRangeBar()) {
 			if (!leftIndex.isEmpty() && !rightIndex.isEmpty()) {
-				vRangeBar.setPinIndices(new int[] {
-					Integer.parseInt(leftIndex),
-					Integer.parseInt(rightIndex)
-				});
+                vRangeBar.setFirstPinIndex(Integer.parseInt(leftIndex));
+                vRangeBar.setSecondPinIndex(Integer.parseInt(rightIndex));
 			}
-		}
-		else {
-			if (!rightIndex.isEmpty()) {
-				vRangeBar.setPinIndex(Integer.parseInt(rightIndex));
+        } else {
+            if (!leftIndex.isEmpty()) {
+                vRangeBar.setFirstPinIndex(Integer.parseInt(leftIndex));
 			}
 		}
 	}
