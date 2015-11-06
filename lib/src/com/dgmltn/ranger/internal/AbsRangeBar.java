@@ -41,7 +41,6 @@ import android.view.ViewParent;
 
 import com.dgmltn.ranger.PinView;
 import com.dgmltn.ranger.R;
-import com.pebblebee.common.logging.PbLog;
 
 /**
  * The MaterialRangeBar is a single or double-sided version of a {@link android.widget.SeekBar}
@@ -487,7 +486,7 @@ public abstract class AbsRangeBar extends View {
      * @param tickCount int specifying the number of ticks to display; must be > 1
      */
     public void setTickCount(int tickCount) {
-        PbLog.e(TAG, "setTickCount(" + tickCount + ')');
+        //PbLog.e(TAG, "setTickCount(" + tickCount + ')');
 
         validateTickCount(tickCount);
 
@@ -1010,7 +1009,7 @@ public abstract class AbsRangeBar extends View {
      * @param point   the point to move the PinView to
      */
     private void movePin(PinView pinView, PointF point) {
-        PbLog.e(TAG, "movePin(pinView=" + pinView + ", point=" + point + ')');
+        //PbLog.e(TAG, "movePin(pinView=" + pinView + ", point=" + point + ')');
         if (pinView.getPosition().equals(point)) {
             return;
         }
