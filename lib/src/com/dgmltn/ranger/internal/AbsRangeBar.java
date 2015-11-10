@@ -62,7 +62,7 @@ public abstract class AbsRangeBar extends View {
     private static final String TAG = "AbsRangeBar";
 
     // Default values for variables
-    private static final int DEFAULT_TICK_COUNT = 6;
+    private static final int DEFAULT_TICK_COUNT = 5;
     private static final float DEFAULT_TICK_SIZE_DP = 1;
     private static final float DEFAULT_PIN_PADDING_DP = 16;
     public static final float DEFAULT_MIN_PIN_FONT_SP = 8;
@@ -119,7 +119,7 @@ public abstract class AbsRangeBar extends View {
     protected int mSecondConnectingLineColor;
 
     // Listeners
-    private OnRangeBarChangeListener mListener;
+    private OnRangeBarChangeListener mOnRangeBarChangeListener;
 
     private boolean mIsRangeBar = true;
     private int mActiveFirstConnectingLineColor;
@@ -131,7 +131,7 @@ public abstract class AbsRangeBar extends View {
 
     protected boolean mConnectingLineInverted;
 
-    private ValueFormatter mValueFormatter = new ValueFormatter() {
+    private IndexFormatter mIndexFormatter = new IndexFormatter() {
         @Override
         public String getLabel(int index) {
             String value = Integer.toString(index);
@@ -451,7 +451,7 @@ public abstract class AbsRangeBar extends View {
      *                 existing listener
      */
     public void setOnRangeBarChangeListener(OnRangeBarChangeListener listener) {
-        mListener = listener;
+        mOnRangeBarChangeListener = listener;
     }
 
     /**
@@ -459,8 +459,8 @@ public abstract class AbsRangeBar extends View {
      *
      * @param formatter
      */
-    public void setValueFormatter(ValueFormatter formatter) {
-        mValueFormatter = formatter;
+    public void setIndexFormatter(IndexFormatter formatter) {
+        mIndexFormatter = formatter;
         invalidate();
     }
 
@@ -476,7 +476,7 @@ public abstract class AbsRangeBar extends View {
 
     private void validateTickCount(int tickCount) {
         if (tickCount < 2) {
-            throw new IllegalArgumentException("tickCount must be > 1");
+            throw new IllegalArgumentException("tickCount(" + tickCount + ") must be > 1");
         }
     }
 
@@ -996,10 +996,10 @@ public abstract class AbsRangeBar extends View {
      * @param tickIndex the index to get the value for
      */
     public String getPinLabel(int tickIndex) {
-        if (mValueFormatter == null) {
+        if (mIndexFormatter == null) {
             return Integer.toString(tickIndex);
         }
-        return mValueFormatter.getLabel(tickIndex);
+        return mIndexFormatter.getLabel(tickIndex);
     }
 
     /**
@@ -1024,7 +1024,6 @@ public abstract class AbsRangeBar extends View {
     protected Paint mTickPaint;
     protected Paint mFirstConnectingLinePaint;
     protected Paint mSecondConnectingLinePaint;
-
 
     protected void initBar() {
         // Initialize the paint.
@@ -1161,10 +1160,18 @@ public abstract class AbsRangeBar extends View {
      * for every movement of the thumb.
      */
     public interface OnRangeBarChangeListener {
-        void onRangeChangeListener(AbsRangeBar rangeBar, int firstIndex, int secondIndex);
+        /**
+         * Notification that the progress level has changed. Clients can use the fromUser parameter
+         * to distinguish user-initiated changes from those that occurred programmatically.
+         *
+         * @param rangeBar    The RangeBar whose progress has changed
+         * @param firstIndex
+         * @param secondIndex
+         */
+        void onRangeChanged(AbsRangeBar rangeBar, int firstIndex, int secondIndex);
     }
 
-    public interface ValueFormatter {
+    public interface IndexFormatter {
         String getLabel(int index);
     }
 }

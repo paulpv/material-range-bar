@@ -48,7 +48,7 @@ public class MainActivity extends Activity implements
 	private int mSelectorColor;
 
 
-	private AbsRangeBar.ValueFormatter mIntValueFormatter = new AbsRangeBar.ValueFormatter() {
+    private AbsRangeBar.IndexFormatter mIntIndexFormatter = new AbsRangeBar.IndexFormatter() {
 		public int mStart = 10;
 		public int mInterval = 2;
 
@@ -58,7 +58,7 @@ public class MainActivity extends Activity implements
 		}
 	};
 
-	private AbsRangeBar.ValueFormatter mFloatValueFormatter = new AbsRangeBar.ValueFormatter() {
+    private AbsRangeBar.IndexFormatter mFloatIndexFormatter = new AbsRangeBar.IndexFormatter() {
 		public float mStart = 0f;
 		public float mInterval = 1f;
 
@@ -68,7 +68,7 @@ public class MainActivity extends Activity implements
 		}
 	};
 
-	private AbsRangeBar.ValueFormatter mCharValueFormatter = new AbsRangeBar.ValueFormatter() {
+    private AbsRangeBar.IndexFormatter mCharIndexFormatter = new AbsRangeBar.IndexFormatter() {
 		public char mStart = 'A';
 
 		@Override
@@ -95,7 +95,7 @@ public class MainActivity extends Activity implements
 		setContentView(R.layout.activity_main);
 		ButterKnife.bind(this);
 
-		vRangeBar.setValueFormatter(mIntValueFormatter);
+        vRangeBar.setIndexFormatter(mIntIndexFormatter);
 
 		Window window = getWindow();
 		window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -302,17 +302,17 @@ public class MainActivity extends Activity implements
 
 	@OnClick(R.id.buttonUseIntLabels)
 	public void buttonUseIntLabels(View v) {
-		vRangeBar.setValueFormatter(mIntValueFormatter);
+        vRangeBar.setIndexFormatter(mIntIndexFormatter);
 	}
 
 	@OnClick(R.id.buttonUseFloatLabels)
 	public void buttonUseFloatLabels(View v) {
-		vRangeBar.setValueFormatter(mFloatValueFormatter);
+        vRangeBar.setIndexFormatter(mFloatIndexFormatter);
 	}
 
 	@OnClick(R.id.buttonUseCharLabels)
 	public void buttonUseCharLabels(View v) {
-		vRangeBar.setValueFormatter(mCharValueFormatter);
+        vRangeBar.setIndexFormatter(mCharIndexFormatter);
 	}
 
 	/**
