@@ -25,7 +25,6 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.dgmltn.ranger.internal.AbsRangeBar;
-import com.dgmltn.ranger.internal.IRangeBarFormatter;
 
 /**
  * Represents a thumb in the RangeBar slider. This is the handle for the slider
@@ -53,7 +52,7 @@ public class PinView extends View {
     private float mTargetRadiusPx;
 
     // Indicates whether this thumb is currently pressed and active.
-    private boolean mIsPressed = false;
+    private boolean mIsPressed;
 
     // The current position of the thumb in the parent view.
     private PointF mPosition;
@@ -83,8 +82,6 @@ public class PinView extends View {
 
     private float mCircleRadiusPx;
 
-    private IRangeBarFormatter mFormatter;
-
     private float mMinPinFont = AbsRangeBar.DEFAULT_MIN_PIN_FONT_SP;
 
     private float mMaxPinFont = AbsRangeBar.DEFAULT_MAX_PIN_FONT_SP;
@@ -108,10 +105,6 @@ public class PinView extends View {
     }
 
     // Initialization //////////////////////////////////////////////////////////
-
-    public void setFormatter(IRangeBarFormatter formatter) {
-        mFormatter = formatter;
-    }
 
     /**
      * The view is created empty with a default constructor. Use init to set all the initial
@@ -262,13 +255,10 @@ public class PinView extends View {
         if (mPinRadiusPx > 0) {
             mBounds.set((int) mPosition.x - mPinRadiusPx,
                     (int) mPosition.y - (mPinRadiusPx * 2) - (int) mPinPadding,
-                    (int) mPosition.x + mPinRadiusPx, (int) mPosition.y - (int) mPinPadding);
+                    (int) mPosition.x + mPinRadiusPx,
+                    (int) mPosition.y - (int) mPinPadding);
             mPin.setBounds(mBounds);
             String text = mLabel;
-
-            if (mFormatter != null) {
-                text = mFormatter.format(text);
-            }
 
             calibrateTextSize(mTextPaint, text, mBounds.width());
             mTextPaint.getTextBounds(text, 0, text.length(), mBounds);

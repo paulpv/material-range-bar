@@ -115,13 +115,21 @@ public class MainActivity extends Activity implements
 		// Sets the display values of the indices
 		vRangeBar.setOnRangeBarChangeListener(new AbsRangeBar.OnRangeBarChangeListener() {
 			@Override
-            public void onRangeChangeListener(AbsRangeBar rangeBar, int firstIndex, int secondIndex) {
+            public void onRangeChanged(AbsRangeBar rangeBar, int firstIndex, int secondIndex, boolean fromUser) {
                 vLeftIndex.setText(Integer.toString(firstIndex));
                 vRightIndex.setText(Integer.toString(secondIndex));
 			}
+
+            @Override
+            public void onStartTrackingTouch(AbsRangeBar rangeBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(AbsRangeBar rangeBar) {
+            }
 		});
-        vLeftIndex.setText(Integer.toString(vRangeBar.getFirstIndex()));
-        vRightIndex.setText(Integer.toString(vRangeBar.getSecondIndex()));
+        vLeftIndex.setText(Integer.toString(vRangeBar.getFirstPinIndex()));
+        vRightIndex.setText(Integer.toString(vRangeBar.getSecondPinIndex()));
 
 		// Setting Number Attributes -------------------------------
 
@@ -290,12 +298,11 @@ public class MainActivity extends Activity implements
 
 		if (vRangeBar.isRangeBar()) {
 			if (!leftIndex.isEmpty() && !rightIndex.isEmpty()) {
-                vRangeBar.setFirstPinIndex(Integer.parseInt(leftIndex));
-                vRangeBar.setSecondPinIndex(Integer.parseInt(rightIndex));
+                vRangeBar.setPinIndices(Integer.parseInt(leftIndex), Integer.parseInt(rightIndex));
 			}
         } else {
             if (!leftIndex.isEmpty()) {
-                vRangeBar.setFirstPinIndex(Integer.parseInt(leftIndex));
+                vRangeBar.setPinIndices(Integer.parseInt(leftIndex), vRangeBar.getTickCount() - 1);
 			}
 		}
 	}

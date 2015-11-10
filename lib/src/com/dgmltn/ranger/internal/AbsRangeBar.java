@@ -34,32 +34,44 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v4.util.Pools;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import com.dgmltn.ranger.PinView;
 import com.dgmltn.ranger.R;
 
+import java.util.ArrayList;
+
 /**
- * The MaterialRangeBar is a single or double-sided version of a {@link android.widget.SeekBar}
- * with discrete values. Whereas the thumb for the SeekBar can be dragged to any
- * position in the bar, the RangeBar only allows its thumbs to be dragged to
- * discrete positions (denoted by tick marks) in the bar. When released, a
- * RangeBar thumb will snap to the nearest tick mark.
- * This version is forked from edmodo range bar
+ * Traits taken from the following files:
+ * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/preference/SeekBarPreference.java
+ * &nbsp;&nbsp;contains https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/SeekBar.java
+ * &nbsp;&nbsp;&nbsp;&nbsp;extends https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/AbsSeekBar.java
+ * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;extends https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/ProgressBar.java
+ * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;extends View https://github.com/android/platform_frameworks_base/blob/master/core/java/android/view/View.java
+ * https://github.com/dgmltn/material-range-bar/blob/master/lib/src/com/dgmltn/ranger/internal/AbsRangeBar.java
+ * &nbsp;&nbsp;a fork of https://github.com/oli107/material-range-bar/blob/master/rangebar/src/com/appyvet/rangebar/RangeBar.java
+ * &nbsp;&nbsp;&nbsp;&nbsp;a fork of https://github.com/edmodo/range-bar/blob/master/rangebar/src/com/edmodo/rangebar/RangeBar.java
+ * <p/>
+ * The MaterialRangeBar is a single or double-sided version of a {@link android.widget.SeekBar} with
+ * discrete values. Whereas the thumb for the SeekBar can be dragged to any position in the bar, the
+ * RangeBar only allows its thumbs to be dragged to discrete positions (denoted by tick marks) in
+ * the bar. When released, a RangeBar thumb will snap to the nearest tick mark. This version is
+ * forked from edmodo range bar:
  * https://github.com/edmodo/range-bar.git
- * Clients of the RangeBar can attach a
- * {@link AbsRangeBar.OnRangeBarChangeListener} to be notified when the pins
- * have
- * been moved.
+ * Clients of the RangeBar can attach a {@link AbsRangeBar.OnRangeBarChangeListener} to be notified
+ * when the pins have been moved.
  */
 public abstract class AbsRangeBar extends View {
 
     // Member Variables ////////////////////////////////////////////////////////
 
-    private static final String TAG = "AbsRangeBar";
+    //private static final String TAG = PbLog.TAG("AbsRangeBar");
 
     // Default values for variables
     private static final int DEFAULT_TICK_COUNT = 5;
@@ -143,31 +155,31 @@ public abstract class AbsRangeBar extends View {
         }
     };
 
+    // TODO:(pv) Consider removing most if not all of these...
+    private final long mUiThreadId;
+    private RefreshProgressRunnable mRefreshProgressRunnable;
+    private boolean mAttached;
+    private boolean mRefreshIsPosted;
+    private final ArrayList<RefreshData> mRefreshData = new ArrayList<RefreshData>();
+
     // Constructors ////////////////////////////////////////////////////////////
 
     public AbsRangeBar(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public AbsRangeBar(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
+        this(context, attrs, 0);
     }
 
-    public AbsRangeBar(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init(context, attrs);
+    public AbsRangeBar(Context context, AttributeSet attrs, int defStyleAttr) {
+        this(context, attrs, defStyleAttr, 0);
     }
 
-    /**
-     * Does all the functions of the constructor for RangeBar. Called by both
-     * RangeBar constructors in lieu of copying the code for each constructor.
-     *
-     * @param context Context from the constructor.
-     * @param attrs   AttributeSet from the constructor.
-     */
-    @SuppressWarnings("UnnecessaryLocalVariable")
-    private void init(Context context, AttributeSet attrs) {
+    public AbsRangeBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+
+        mUiThreadId = Thread.currentThread().getId();
 
         mFirstPinView = new PinView(context, "mFirstPinView");
         mSecondPinView = new PinView(context, "mSecondPinView");
@@ -237,6 +249,8 @@ public abstract class AbsRangeBar extends View {
             ta.recycle();
         }
 
+        mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+
         initBar();
         initPins(true);
         setTickCount(mTickCount);
@@ -270,8 +284,8 @@ public abstract class AbsRangeBar extends View {
         bundle.putFloat("PIN_PADDING", mPinPadding);
         bundle.putBoolean("IS_RANGE_BAR", mIsRangeBar);
         bundle.putBoolean("ARE_PINS_TEMPORARY", mArePinsTemporary);
-        bundle.putInt("FIRST_PIN_INDEX", getFirstIndex());
-        bundle.putInt("SECOND_PIN_INDEX", getSecondIndex());
+        bundle.putInt("FIRST_PIN_INDEX", getFirstPinIndex());
+        bundle.putInt("SECOND_PIN_INDEX", getSecondPinIndex());
 
         bundle.putFloat("MIN_PIN_FONT", mMinPinFont);
         bundle.putFloat("MAX_PIN_FONT", mMaxPinFont);
@@ -304,8 +318,7 @@ public abstract class AbsRangeBar extends View {
             mIsRangeBar = bundle.getBoolean("IS_RANGE_BAR");
             mArePinsTemporary = bundle.getBoolean("ARE_PINS_TEMPORARY");
 
-            setFirstPinIndex(bundle.getInt("FIRST_PIN_INDEX"));
-            setSecondPinIndex(bundle.getInt("SECOND_PIN_INDEX"));
+            setPinIndices(bundle.getInt("FIRST_PIN_INDEX"), bundle.getInt("SECOND_PIN_INDEX"));
 
             mMinPinFont = bundle.getFloat("MIN_PIN_FONT");
             mMaxPinFont = bundle.getFloat("MAX_PIN_FONT");
@@ -377,68 +390,203 @@ public abstract class AbsRangeBar extends View {
     // Touch Methods ////////////////////////////////////////////////////////////
 
     private PinView mDraggingPin;
+    private int mScaledTouchSlop;
+    private PointF mTouchDown;
+    private boolean mIsTrackingTouch;
 
+    /**
+     * Some logic ideas came from:
+     * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/AbsSeekBar.java#L564
+     *
+     * @param event
+     * @return
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
-        // Some logic ideas came from AbsSeekBar.java
-        // https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/widget/AbsSeekBar.java
-
-        // If this View is not enabled, don't allow for touch interactions.
         if (!isEnabled()) {
             return false;
         }
 
         switch (event.getAction()) {
-
-            case MotionEvent.ACTION_DOWN: {
+            case MotionEvent.ACTION_DOWN:
                 //PbLog.e(TAG, "onTouchEvent: ACTION_DOWN");
-                if (mDraggingPin == null) {
-                    mDraggingPin = getTargetPinView(event.getX(), event.getY());
-                    //PbLog.e(TAG, "onTouchEvent: ACTION_DOWN mDraggingPin=" + mDraggingPin);
-                    if (mDraggingPin != null) {
-                        pressPin(mDraggingPin);
+                if (isInScrollingContainer()) {
+                    //PbLog.e(TAG, "onTouchEvent: ACTION_DOWN isInScrollingContainer() == true; waiting for slop");
+                    mTouchDown = new PointF(event.getX(), event.getY());
+                } else {
+                    //PbLog.e(TAG, "onTouchEvent: ACTION_DOWN isInScrollingContainer() == false; start tracking/processing");
+                    setPressed(true);
+                    //if (mThumb != null) {
+                    //    invalidate(mThumb.getBounds()); // This may be within the padding region
+                    //}
+                    invalidate();
+                    onStartTrackingTouch();
+                    trackTouchEvent(event);
+                    attemptClaimDrag();
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //PbLog.e(TAG, "onTouchEvent: ACTION_MOVE");
+                if (mIsTrackingTouch) {
+                    //PbLog.e(TAG, "onTouchEvent: ACTION_MOVE mIsTrackingTouch == true; track/process");
+                    trackTouchEvent(event);
+                } else {
+                    final float x = event.getX();
+                    if (mTouchDown != null && Math.abs(x - mTouchDown.x) > mScaledTouchSlop) {
+                        //PbLog.e(TAG, "onTouchEvent: ACTION_MOVE mIsTrackingTouch == false; slop exceeded; start tracking/processing");
                         setPressed(true);
+                        //if (mThumb != null) {
+                        //    invalidate(mThumb.getBounds()); // This may be within the padding region
+                        //}
+                        invalidate();
+                        onStartTrackingTouch();
+                        trackTouchEvent(event);
+                        attemptClaimDrag();
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                //PbLog.e(TAG, "onTouchEvent: ACTION_UP");
+                if (mIsTrackingTouch) {
+                    //PbLog.e(TAG, "onTouchEvent: ACTION_UP mIsTrackingTouch == true; track/process and stop tracking/processing");
+                    trackTouchEvent(event);
+                    onStopTrackingTouch();
+                    setPressed(false);
+                } else {
+                    //PbLog.e(TAG, "onTouchEvent: ACTION_UP mIsTrackingTouch == false; start and stop tracking/processing tap-seek");
+                    // Touch up when we never crossed the touch slop threshold should
+                    // be interpreted as a tap-seek to that location.
+                    onStartTrackingTouch();
+                    trackTouchEvent(event);
+                    onStopTrackingTouch();
+                }
+                mTouchDown = null;
+                // ProgressBar doesn't know to repaint the thumb drawable
+                // in its inactive state when the touch stops (because the
+                // value has not apparently changed)
+                invalidate();
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                //PbLog.e(TAG, "onTouchEvent: ACTION_CANCEL");
+                if (mIsTrackingTouch) {
+                    //PbLog.e(TAG, "onTouchEvent: ACTION_CANCEL mIsTrackingTouch == true; stop tracking/processing");
+                    onStopTrackingTouch();
+                    setPressed(false);
+                }
+                mTouchDown = null;
+                invalidate(); // see above explanation
+                break;
+        }
+        return true;
+    }
+
+    /**
+     * From:
+     * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/view/View.java#L10407
+     *
+     * @return
+     */
+    public boolean isInScrollingContainer() {
+        ViewParent p = getParent();
+        while (p != null && p instanceof ViewGroup) {
+            if (((ViewGroup) p).shouldDelayChildPressedState()) {
+                return true;
+            }
+            p = p.getParent();
+        }
+        return false;
+    }
+
+    /**
+     * Tries to claim the user's drag motion, and requests disallowing any
+     * ancestors from stealing events in the drag.
+     */
+    private void attemptClaimDrag() {
                         ViewParent parent = getParent();
                         if (parent != null) {
                             parent.requestDisallowInterceptTouchEvent(true);
                         }
                     }
+
+    /**
+     * This is called when the user has started touching this widget.
+     */
+    protected void onStartTrackingTouch() {
+        //PbLog.e(TAG, "onStartTrackingTouch()");
+        mIsTrackingTouch = true;
+        if (mOnRangeBarChangeListener != null) {
+            mOnRangeBarChangeListener.onStartTrackingTouch(this);
+                }
+            }
+
+    /**
+     * This is called when the user either releases his touch or the touch is
+     * canceled.
+     */
+    protected void onStopTrackingTouch() {
+        //PbLog.e(TAG, "onStopTrackingTouch()");
+        mIsTrackingTouch = false;
+        if (mOnRangeBarChangeListener != null) {
+            mOnRangeBarChangeListener.onStopTrackingTouch(this);
+        }
+    }
+
+    /**
+     * @param event
+     */
+    private void trackTouchEvent(MotionEvent event) {
+        //PbLog.e(TAG, "trackTouchEvent(event=" + event + ')');
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mDraggingPin = getTargetPinView(event.getX(), event.getY());
+                //PbLog.e(TAG, "trackTouchEvent: ACTION_DOWN mDraggingPin=" + mDraggingPin);
+                if (mDraggingPin != null) {
+                    pressPin(mDraggingPin);
                 }
                 break;
-            }
             case MotionEvent.ACTION_MOVE:
-                //PbLog.e(TAG, "onTouchEvent: ACTION_MOVE");
+                if (mDraggingPin == null && mTouchDown != null) {
+                    mDraggingPin = getTargetPinView(mTouchDown.x, mTouchDown.y);
+                    //PbLog.e(TAG, "trackTouchEvent: ACTION_MOVE mDraggingPin=" + mDraggingPin);
+                    if (mDraggingPin != null) {
+                        pressPin(mDraggingPin);
+                    }
+                }
                 if (mDraggingPin != null) {
                     int nearestTickIndex = getNearestIndex(mDraggingPin);
-                    //PbLog.e(TAG, "onTouchEvent: ACTION_MOVE nearestTickIndex=" + nearestTickIndex);
+                    //PbLog.e(TAG, "trackTouchEvent: ACTION_MOVE nearestTickIndex=" + nearestTickIndex);
                     PointF point = new PointF(event.getX(), event.getY());
-                    setPinIndex(mDraggingPin, nearestTickIndex, point);
+
+                    int firstPinIndex = -1;
+                    int secondPinIndex = -1;
+                    if (mFirstPinView.equals(mDraggingPin)) {
+                        firstPinIndex = nearestTickIndex;
+                        secondPinIndex = mSecondPinView.getIndex();
+                    } else if (mSecondPinView.equals(mDraggingPin)) {
+                        firstPinIndex = mFirstPinView.getIndex();
+                        secondPinIndex = nearestTickIndex;
+                }
+
+                    if (firstPinIndex != -1 && secondPinIndex != -1) {
+                        setPinIndices(firstPinIndex, secondPinIndex, mDraggingPin, point);
+                    }
                 }
                 break;
-
             case MotionEvent.ACTION_UP:
-                //PbLog.e(TAG, "onTouchEvent: ACTION_UP");
                 if (mDraggingPin != null) {
                     releasePin(mDraggingPin);
                     mDraggingPin = null;
-                    setPressed(false);
                 }// else {
                 //    // Touch up when we never crossed the touch slop threshold should
                 //    // be interpreted as a tap-seek to that location. But let's not do that now.
                 //}
                 break;
-
             case MotionEvent.ACTION_CANCEL:
-                //PbLog.e(TAG, "onTouchEvent: ACTION_CANCEL");
                 if (mDraggingPin != null) {
                     mDraggingPin = null;
-                    setPressed(false);
                 }
                 break;
         }
-
-        return true;
     }
 
     // Public Methods //////////////////////////////////////////////////////////
@@ -474,6 +622,15 @@ public abstract class AbsRangeBar extends View {
         invalidate();
     }
 
+    /**
+     * Gets the tick count.
+     *
+     * @return the tick count
+     */
+    public int getTickCount() {
+        return mTickCount;
+    }
+
     private void validateTickCount(int tickCount) {
         if (tickCount < 2) {
             throw new IllegalArgumentException("tickCount(" + tickCount + ") must be > 1");
@@ -492,12 +649,15 @@ public abstract class AbsRangeBar extends View {
 
         mTickCount = tickCount;
 
+        boolean changed = false;
+
         int maxSecondIndex = mTickCount - 1;
         //PbLog.e(TAG, "setTickCount: maxSecondIndex=" + maxSecondIndex);
         int secondIndex = mSecondPinView.getIndex();
         //PbLog.e(TAG, "setTickCount: secondIndex=" + secondIndex);
         if (secondIndex > maxSecondIndex) {
-            setSecondPinIndex(maxSecondIndex);
+            changed = true;
+            secondIndex = maxSecondIndex;
         }
 
         int maxFirstIndex = mSecondPinView.getIndex() - 1;
@@ -505,7 +665,12 @@ public abstract class AbsRangeBar extends View {
         int firstIndex = mFirstPinView.getIndex();
         //PbLog.e(TAG, "setTickCount: firstIndex=" + firstIndex);
         if (firstIndex > maxFirstIndex) {
-            setFirstPinIndex(firstIndex);
+            changed = true;
+            firstIndex = maxFirstIndex;
+        }
+
+        if (changed) {
+            setPinIndices(firstIndex, secondIndex, null, null);
         }
 
         invalidate();
@@ -606,6 +771,15 @@ public abstract class AbsRangeBar extends View {
         if (invalidate) {
             initPins(false);
         }
+    }
+
+    /**
+     * Gets the type of the bar.
+     *
+     * @return true if rangebar, false if seekbar.
+     */
+    public boolean isRangeBar() {
+        return mIsRangeBar;
     }
 
     /**
@@ -732,29 +906,11 @@ public abstract class AbsRangeBar extends View {
     }
 
     /**
-     * Gets the tick count.
-     *
-     * @return the tick count
-     */
-    public int getTickCount() {
-        return mTickCount;
-    }
-
-    /**
-     * Gets the type of the bar.
-     *
-     * @return true if rangebar, false if seekbar.
-     */
-    public boolean isRangeBar() {
-        return mIsRangeBar;
-    }
-
-    /**
      * Gets the index of the first pin.
      *
      * @return the 0-based index of the first pin
      */
-    public int getFirstIndex() {
+    public int getFirstPinIndex() {
         return mFirstPinView.getIndex();
     }
 
@@ -763,17 +919,12 @@ public abstract class AbsRangeBar extends View {
      *
      * @return the 0-based index of the second pin
      */
-    public int getSecondIndex() {
+    public int getSecondPinIndex() {
         return mSecondPinView.getIndex();
     }
 
-    public void setFirstPinIndex(int index) {
-        setPinIndex(mFirstPinView, index, null);
-    }
-
-
-    public void setSecondPinIndex(int index) {
-        setPinIndex(mSecondPinView, index, null);
+    public void setPinIndices(int firstPinIndex, int secondPinIndex) {
+        setPinIndices(firstPinIndex, secondPinIndex, null, null);
     }
 
     private boolean setPinIndex(PinView pinView, int index, PointF point) {
@@ -782,8 +933,6 @@ public abstract class AbsRangeBar extends View {
             return false;
         }
 
-        PointF pointMin = new PointF();
-        PointF pointMax = new PointF();
         PointF pointIndex = new PointF();
         if (point == null) {
             getPointOfIndex(index, pointIndex);
@@ -808,8 +957,10 @@ public abstract class AbsRangeBar extends View {
         //PbLog.e(TAG, "setPinIndex: indexMin=" + indexMin);
         //PbLog.e(TAG, "setPinIndex: indexMax=" + indexMax);
 
+        PointF pointMin = new PointF();
         getPointOfIndex(indexMin, pointMin);
         //PbLog.e(TAG, "setPinIndex: pointMin=" + pointMin);
+        PointF pointMax = new PointF();
         getPointOfIndex(indexMax, pointMax);
         //PbLog.e(TAG, "setPinIndex: pointMax=" + pointMax);
 
@@ -830,14 +981,138 @@ public abstract class AbsRangeBar extends View {
         String label = getPinLabel(index);
         pinView.setLabel(label);
 
+        return changed;
+    }
+
+    private boolean setPinIndices(int firstPinIndex, int secondPinIndex, PinView draggingPin, PointF point) {
+
+        boolean changed = false;
+
+        //noinspection ConstantConditions
+        changed |= setPinIndex(mSecondPinView, secondPinIndex, mSecondPinView.equals(draggingPin) ? point : null);
+        changed |= setPinIndex(mFirstPinView, firstPinIndex, mFirstPinView.equals(draggingPin) ? point : null);
+
         if (changed) {
-            if (mListener != null) {
-                mListener.onRangeChangeListener(this, mFirstPinView.getIndex(), mSecondPinView.getIndex());
+            postInvalidate();
+
+            boolean fromUser = draggingPin != null;
+            refreshPinIndexes(mFirstPinView.getIndex(), mSecondPinView.getIndex(), fromUser);
             }
+
+        return changed;
         }
 
-        return true;
+    //
+    //
+    //
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (mRefreshData != null) {
+            synchronized (this) {
+                final int count = mRefreshData.size();
+                for (int i = 0; i < count; i++) {
+                    final RefreshData rd = mRefreshData.get(i);
+                    doRefreshPinIndexes(rd.firstPinIndex, rd.secondPinIndex, rd.fromUser, true);
+                    rd.recycle();
+                }
+                mRefreshData.clear();
+            }
+        }
+        mAttached = true;
     }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (mRefreshProgressRunnable != null) {
+            removeCallbacks(mRefreshProgressRunnable);
+            mRefreshIsPosted = false;
+        }
+        // This should come after stopAnimation(), otherwise an invalidate message remains in the
+        // queue, which can prevent the entire view hierarchy from being GC'ed during a rotation
+        super.onDetachedFromWindow();
+        mAttached = false;
+    }
+
+    private class RefreshProgressRunnable implements Runnable {
+        public void run() {
+            synchronized (AbsRangeBar.this) {
+                final int count = mRefreshData.size();
+                for (int i = 0; i < count; i++) {
+                    final RefreshData rd = mRefreshData.get(i);
+                    doRefreshPinIndexes(rd.firstPinIndex, rd.secondPinIndex, rd.fromUser, true);
+                    rd.recycle();
+                }
+                mRefreshData.clear();
+                mRefreshIsPosted = false;
+            }
+        }
+    }
+
+    private static class RefreshData {
+        private static final int POOL_MAX = 24;
+        private static final Pools.SynchronizedPool<RefreshData> sPool =
+                new Pools.SynchronizedPool<RefreshData>(POOL_MAX);
+
+        public int firstPinIndex;
+        public int secondPinIndex;
+        public boolean fromUser;
+
+        public static RefreshData obtain(int firstPinIndex, int secondPinIndex, boolean fromUser) {
+            RefreshData rd = sPool.acquire();
+            if (rd == null) {
+                rd = new RefreshData();
+            }
+            rd.firstPinIndex = firstPinIndex;
+            rd.secondPinIndex = secondPinIndex;
+            rd.fromUser = fromUser;
+            return rd;
+        }
+
+        public void recycle() {
+            sPool.release(this);
+        }
+    }
+
+    private void refreshPinIndexes(int firstPinIndex, int secondPinIndex, boolean fromUser) {
+        synchronized (AbsRangeBar.this) {
+            if (mUiThreadId == Thread.currentThread().getId()) {
+                doRefreshPinIndexes(firstPinIndex, secondPinIndex, fromUser, true);
+            } else {
+                if (mRefreshProgressRunnable == null) {
+                    mRefreshProgressRunnable = new RefreshProgressRunnable();
+                }
+
+                final RefreshData rd = RefreshData.obtain(firstPinIndex, secondPinIndex, fromUser);
+                mRefreshData.add(rd);
+                if (mAttached && !mRefreshIsPosted) {
+                    post(mRefreshProgressRunnable);
+                    mRefreshIsPosted = true;
+                }
+            }
+        }
+    }
+
+    protected void doRefreshPinIndexes(int firstPinIndex, int secondPinIndex, boolean fromUser, boolean callBackToApp) {
+        synchronized (AbsRangeBar.this) {
+            invalidate();
+            if (callBackToApp) {
+                onRefreshPinIndexes(firstPinIndex, secondPinIndex, fromUser);
+            }
+        }
+    }
+
+    protected void onRefreshPinIndexes(int firstPinIndex, int secondPinIndex, boolean fromUser) {
+        setPinIndices(firstPinIndex, secondPinIndex);
+        if (mOnRangeBarChangeListener != null) {
+            mOnRangeBarChangeListener.onRangeChanged(this, mFirstPinView.getIndex(), mSecondPinView.getIndex(), fromUser);
+        }
+    }
+
+    //
+    //
+    //
 
     @Override
     public void setEnabled(boolean enabled) {
@@ -887,9 +1162,7 @@ public abstract class AbsRangeBar extends View {
         if (resetIndexes) {
             mFirstPinView.setIndex(0);
             mSecondPinView.setIndex(mTickCount - 1);
-            if (mListener != null) {
-                mListener.onRangeChangeListener(this, mFirstPinView.getIndex(), mSecondPinView.getIndex());
-            }
+            refreshPinIndexes(mFirstPinView.getIndex(), mSecondPinView.getIndex(), false);
         }
 
         if (!mArePinsTemporary) {
@@ -949,11 +1222,10 @@ public abstract class AbsRangeBar extends View {
                 }
             });
             animator.start();
+            thumb.press();
         } else {
             thumb.setSize(mExpandedPinRadius, mPinPadding);
         }
-
-        thumb.press();
     }
 
     /**
@@ -983,11 +1255,10 @@ public abstract class AbsRangeBar extends View {
                 }
             });
             animator.start();
+            pinView.release();
         } else {
             invalidate();
         }
-
-        pinView.release();
     }
 
     /**
@@ -1167,8 +1438,25 @@ public abstract class AbsRangeBar extends View {
          * @param rangeBar    The RangeBar whose progress has changed
          * @param firstIndex
          * @param secondIndex
+         * @param fromUser    True if the progress change was initiated by the user.
          */
-        void onRangeChanged(AbsRangeBar rangeBar, int firstIndex, int secondIndex);
+        void onRangeChanged(AbsRangeBar rangeBar, int firstIndex, int secondIndex, boolean fromUser);
+
+        /**
+         * Notification that the user has started a touch gesture. Clients may want to use this
+         * to disable advancing the RangeBar.
+         *
+         * @param rangeBar The RangeBar in which the touch gesture began
+         */
+        void onStartTrackingTouch(AbsRangeBar rangeBar);
+
+        /**
+         * Notification that the user has finished a touch gesture. Clients may want to use this
+         * to re-enable advancing the RangeBar.
+         *
+         * @param rangeBar The RangeBar in which the touch gesture began
+         */
+        void onStopTrackingTouch(AbsRangeBar rangeBar);
     }
 
     public interface IndexFormatter {

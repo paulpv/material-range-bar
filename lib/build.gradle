@@ -1,9 +1,9 @@
 apply plugin: 'com.android.library'
 
-version = "1.2.0"
+version = "1.2.1"
 group = "com.swooby"
-archivesBaseName = "paulpv-android-material-range-bar"
-description = "Material Range Bar for Android"
+archivesBaseName = "paulpv-android-material-range-bar-lib"
+description = "Material Range Bar Library for Android"
 
 android {
 
