@@ -1,12 +1,12 @@
-package com.dgmltn.ranger.demo;
+package com.dgmltn.ranger;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.preference.CheckBoxPreference;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TextView;
 
-import com.dgmltn.ranger.HorizontalRangeBar;
 import com.dgmltn.ranger.internal.AbsRangeBar;
 import com.pebblebee.common.logging.PbLog;
 
@@ -15,7 +15,7 @@ public abstract class AbsRangeBarPreference
 
     private static final String TAG = PbLog.TAG("AbsRangeBarPreference");
 
-    public interface OnRangeBarChangeListener {
+    public interface OnRangeBarPreferenceListener {
         /**
          * Notification that the progress level has changed. Clients can use the fromUser parameter
          * to distinguish user-initiated changes from those that occurred programmatically.
@@ -26,6 +26,8 @@ public abstract class AbsRangeBarPreference
          * @return true to allow the change, false to prevent the change
          */
         boolean onRangeChanged(AbsRangeBarPreference preference, int firstValue, int secondValue);
+
+        void onRangeBarViewBound(AbsRangeBar rangeBar);
     }
 
     public interface ValueFormatter {
@@ -36,7 +38,7 @@ public abstract class AbsRangeBarPreference
     private int DEFAULT_VALUE_MIN = -42;
     private int DEFAULT_VALUE_MAX = 42;
 
-    private OnRangeBarChangeListener mRangeBarChangeListener;
+    private OnRangeBarPreferenceListener mRangeBarPreferenceListener;
     private ValueFormatter mRangeBarValueFormatter;
     private boolean mEnableDrawTicks;
 
@@ -47,6 +49,8 @@ public abstract class AbsRangeBarPreference
     private int mSecondPinValue = mValueMax;
 
     private boolean mTrackingTouch;
+
+    AttributeSet mAttributes;
 
     public AbsRangeBarPreference(Context context) {
         this(context, null);
@@ -63,6 +67,7 @@ public abstract class AbsRangeBarPreference
 
     public AbsRangeBarPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+        mAttributes = attrs;
         setLayoutResource(getLayoutResource());
     }
 
@@ -74,6 +79,10 @@ public abstract class AbsRangeBarPreference
         TextView textValueMin = (TextView) view.findViewById(R.id.text_value_min);
         TextView textValueMid = (TextView) view.findViewById(R.id.text_value_mid);
         TextView textValueMax = (TextView) view.findViewById(R.id.text_value_max);
+
+        //Context context = getContext();
+        //TypedArray ta = context.obtainStyledAttributes(mAttributes, R.styleable.AbsRangeBar, 0, 0);
+        //rangeBar.initialize(ta, true);
 
         rangeBar.setOnRangeBarChangeListener(new AbsRangeBar.OnRangeBarChangeListener() {
             @Override
@@ -124,6 +133,10 @@ public abstract class AbsRangeBarPreference
 
         //setPinValues(mFirstPinValue, mSecondPinValue);
         rangeBar.setPinIndices(valueToIndex(mFirstPinValue), valueToIndex(mSecondPinValue));
+
+        if (mRangeBarPreferenceListener != null) {
+            mRangeBarPreferenceListener.onRangeBarViewBound(rangeBar);
+        }
     }
 
     private int indexToValue(int index) {
@@ -134,8 +147,8 @@ public abstract class AbsRangeBarPreference
         return value - mValueMin;
     }
 
-    public void setOnRangeBarChangeListener(OnRangeBarChangeListener listener) {
-        mRangeBarChangeListener = listener;
+    public void setOnRangeBarPreferenceListener(OnRangeBarPreferenceListener listener) {
+        mRangeBarPreferenceListener = listener;
     }
 
     public void setValueFormatter(ValueFormatter formatter) {
@@ -208,7 +221,7 @@ public abstract class AbsRangeBarPreference
     }
 
     private boolean callRangeChangeListener(int firstPinValue, int secondPinValue) {
-        return mRangeBarChangeListener == null || mRangeBarChangeListener.onRangeChanged(this, firstPinValue, secondPinValue);
+        return mRangeBarPreferenceListener == null || mRangeBarPreferenceListener.onRangeChanged(this, firstPinValue, secondPinValue);
     }
 
     private void syncRangeBar(AbsRangeBar rangeBar) {

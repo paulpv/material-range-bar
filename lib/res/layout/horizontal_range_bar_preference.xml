@@ -51,7 +51,6 @@ https://github.com/android/platform_frameworks_base/blob/master/core/res/res/lay
                 android:paddingEnd="8dp"
                 android:paddingStart="8dp"
                 android:paddingTop="8dp"
-                app:temporaryPins="false"
                 />
 
             <TextView

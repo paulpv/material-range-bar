@@ -1,4 +1,4 @@
-package com.dgmltn.ranger.demo;
+package com.dgmltn.ranger;
 
 import android.content.Context;
 import android.util.AttributeSet;

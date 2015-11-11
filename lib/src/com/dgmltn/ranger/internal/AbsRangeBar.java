@@ -42,7 +42,6 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
-import com.dgmltn.ranger.PinView;
 import com.dgmltn.ranger.R;
 
 import java.util.ArrayList;
@@ -112,8 +111,8 @@ public abstract class AbsRangeBar extends View {
     private float mSelectorSize;
 
     // Pins
-    private PinView mFirstPinView;
-    private PinView mSecondPinView;
+    private final PinView mFirstPinView;
+    private final PinView mSecondPinView;
     private int mFirstPinColor;
     private int mSecondPinColor;
     private float mPinRadius;
@@ -180,11 +179,12 @@ public abstract class AbsRangeBar extends View {
         super(context, attrs, defStyleAttr, defStyleRes);
 
         mUiThreadId = Thread.currentThread().getId();
+        mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
         mFirstPinView = new PinView(context, "mFirstPinView");
         mSecondPinView = new PinView(context, "mSecondPinView");
 
-        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.AbsRangeBar, 0, 0);
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.AbsRangeBar, defStyleAttr, defStyleRes);
 
         try {
             // Sets the values of the user-defined attributes based on the XML attributes.
@@ -248,8 +248,6 @@ public abstract class AbsRangeBar extends View {
         } finally {
             ta.recycle();
         }
-
-        mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
         initBar();
         initPins(true);

@@ -11,7 +11,7 @@
  * governing permissions and limitations under the License. 
  */
 
-package com.dgmltn.ranger;
+package com.dgmltn.ranger.internal;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -24,6 +24,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 
+import com.dgmltn.ranger.R;
 import com.dgmltn.ranger.internal.AbsRangeBar;
 
 /**
