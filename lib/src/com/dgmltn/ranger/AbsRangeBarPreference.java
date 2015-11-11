@@ -1,7 +1,6 @@
 package com.dgmltn.ranger;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.preference.CheckBoxPreference;
 import android.util.AttributeSet;
 import android.view.View;
