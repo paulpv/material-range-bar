@@ -185,6 +185,16 @@ public abstract class AbsRangeBar extends View {
         mSecondPinView = new PinView(context, "mSecondPinView");
 
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.AbsRangeBar, defStyleAttr, defStyleRes);
+        initialize(ta);
+    }
+
+    public void initialize(TypedArray ta) {
+        initialize(ta, true);
+    }
+
+    public void initialize(TypedArray ta, boolean recycle) {
+
+        Context context = getContext();
 
         try {
             // Sets the values of the user-defined attributes based on the XML attributes.
@@ -246,7 +256,9 @@ public abstract class AbsRangeBar extends View {
             mMaxPinFont = ta.getDimension(R.styleable.AbsRangeBar_pinMaxFont,
                     DEFAULT_MAX_PIN_FONT_SP * scaledDensity);
         } finally {
-            ta.recycle();
+            if (recycle) {
+                ta.recycle();
+            }
         }
 
         initBar();
@@ -496,17 +508,21 @@ public abstract class AbsRangeBar extends View {
     }
 
     /**
+     * From:
+     * ...
      * Tries to claim the user's drag motion, and requests disallowing any
      * ancestors from stealing events in the drag.
      */
     private void attemptClaimDrag() {
-                        ViewParent parent = getParent();
-                        if (parent != null) {
-                            parent.requestDisallowInterceptTouchEvent(true);
-                        }
-                    }
+        ViewParent parent = getParent();
+        if (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(true);
+        }
+    }
 
     /**
+     * From:
+     * ...
      * This is called when the user has started touching this widget.
      */
     protected void onStartTrackingTouch() {
@@ -514,10 +530,12 @@ public abstract class AbsRangeBar extends View {
         mIsTrackingTouch = true;
         if (mOnRangeBarChangeListener != null) {
             mOnRangeBarChangeListener.onStartTrackingTouch(this);
-                }
-            }
+        }
+    }
 
     /**
+     * From:
+     * ...
      * This is called when the user either releases his touch or the touch is
      * canceled.
      */
@@ -530,6 +548,9 @@ public abstract class AbsRangeBar extends View {
     }
 
     /**
+     * From:
+     * ...
+     *
      * @param event
      */
     private void trackTouchEvent(MotionEvent event) {
@@ -563,7 +584,7 @@ public abstract class AbsRangeBar extends View {
                     } else if (mSecondPinView.equals(mDraggingPin)) {
                         firstPinIndex = mFirstPinView.getIndex();
                         secondPinIndex = nearestTickIndex;
-                }
+                    }
 
                     if (firstPinIndex != -1 && secondPinIndex != -1) {
                         setPinIndices(firstPinIndex, secondPinIndex, mDraggingPin, point);
@@ -995,10 +1016,10 @@ public abstract class AbsRangeBar extends View {
 
             boolean fromUser = draggingPin != null;
             refreshPinIndexes(mFirstPinView.getIndex(), mSecondPinView.getIndex(), fromUser);
-            }
+        }
 
         return changed;
-        }
+    }
 
     //
     //

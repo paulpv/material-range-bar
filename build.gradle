@@ -14,4 +14,15 @@ allprojects {
     repositories {
         jcenter()
     }
- }
+
+    //
+    // Required to poll for new versions of dependencies on each build rather than every 24 hours (the default)
+    //
+    //noinspection GroovyAssignabilityCheck
+    configurations.all {
+        resolutionStrategy {
+            cacheChangingModulesFor 0, 'seconds'
+            cacheDynamicVersionsFor 0, 'seconds'
+        }
+    }
+}

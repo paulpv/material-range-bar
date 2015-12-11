@@ -5,7 +5,6 @@ https://github.com/android/platform_frameworks_base/blob/master/core/res/res/lay
 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
@@ -92,30 +91,29 @@ https://github.com/android/platform_frameworks_base/blob/master/core/res/res/lay
             android:layout_alignParentStart="true"
             android:layout_below="@+id/group_horizontal_range_bar"
             android:maxLines="4"
-            android:text="Summary"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="?android:attr/textColorSecondary"
             />
 
     </RelativeLayout>
 
-    <CheckBox
-        android:id="@android:id/checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:orientation="vertical"
-        />
-
     <!-- Preference should place its actual preference widget here. -->
-    <!--
     <LinearLayout
         android:id="@android:id/widget_frame"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        />
-        -->
+        >
+
+        <CheckBox
+            android:id="@android:id/checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            />
+
+    </LinearLayout>
 
 </LinearLayout>

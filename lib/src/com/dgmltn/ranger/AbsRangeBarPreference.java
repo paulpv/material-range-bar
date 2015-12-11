@@ -7,12 +7,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.dgmltn.ranger.internal.AbsRangeBar;
-import com.pebblebee.common.logging.PbLog;
 
 public abstract class AbsRangeBarPreference
         extends CheckBoxPreference {
 
-    private static final String TAG = PbLog.TAG("AbsRangeBarPreference");
+    //private static final String TAG = PbLog.TAG("AbsRangeBarPreference");
 
     public interface OnRangeBarPreferenceListener {
         /**
@@ -86,7 +85,7 @@ public abstract class AbsRangeBarPreference
         rangeBar.setOnRangeBarChangeListener(new AbsRangeBar.OnRangeBarChangeListener() {
             @Override
             public void onRangeChanged(AbsRangeBar rangeBar, int firstIndex, int secondIndex, boolean fromUser) {
-                PbLog.e(TAG, "onRangeChanged(rangeBar, firstIndex=" + firstIndex + ", secondIndex=" + secondIndex + ", fromUser=" + fromUser + ')');
+                //PbLog.e(TAG, "onRangeChanged(rangeBar, firstIndex=" + firstIndex + ", secondIndex=" + secondIndex + ", fromUser=" + fromUser + ')');
                 if (fromUser && !mTrackingTouch) {
                     syncRangeBar(rangeBar);
                 }
@@ -94,13 +93,13 @@ public abstract class AbsRangeBarPreference
 
             @Override
             public void onStartTrackingTouch(AbsRangeBar rangeBar) {
-                PbLog.e(TAG, "onStartTrackingTouch(rangeBar)");
+                //PbLog.e(TAG, "onStartTrackingTouch(rangeBar)");
                 mTrackingTouch = true;
             }
 
             @Override
             public void onStopTrackingTouch(AbsRangeBar rangeBar) {
-                PbLog.e(TAG, "onStopTrackingTouch(rangeBar)");
+                //PbLog.e(TAG, "onStopTrackingTouch(rangeBar)");
                 mTrackingTouch = false;
                 syncRangeBar(rangeBar);
             }
@@ -172,13 +171,17 @@ public abstract class AbsRangeBarPreference
         if (valueMin >= valueMax) {
             throw new IllegalArgumentException("valueMin(" + valueMin + ") must be < valueMax(" + valueMax + ')');
         }
+
         if (valueMin == Integer.MIN_VALUE || valueMin == Integer.MAX_VALUE) {
             valueMin = DEFAULT_VALUE_MIN;
         }
         if (valueMax == Integer.MIN_VALUE || valueMax == Integer.MAX_VALUE) {
             valueMax = DEFAULT_VALUE_MAX;
         }
+
         if (valueMin != mValueMin || valueMax != mValueMax) {
+            mFirstPinValue = valueMin;
+            mSecondPinValue = valueMax;
             mValueMin = valueMin;
             mValueMax = valueMax;
             notifyChanged();

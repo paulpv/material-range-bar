@@ -44,4 +44,27 @@
         <attr name="pinRadius"/>
     </declare-styleable>
 
+    <declare-styleable name="AbsRangeBarPreference">
+        <attr name="tickStart"/>
+        <attr name="tickEnd"/>
+        <attr name="tickCount"/>
+        <attr name="tickHeight"/>
+        <attr name="tickColor"/>
+        <attr name="barWeight"/>
+        <attr name="rangeBarColor"/>
+        <attr name="textColor"/>
+        <attr name="pinColor"/>
+        <attr name="selectorSize"/>
+        <attr name="pinPadding"/>
+        <attr name="pinMinFont"/>
+        <attr name="pinMaxFont"/>
+        <attr name="rangeBarPaddingBottom"/>
+        <attr name="selectorColor"/>
+        <attr name="rangeBar"/>
+        <attr name="temporaryPins"/>
+        <attr name="connectingLineWeight"/>
+        <attr name="connectingLineColor"/>
+        <attr name="pinRadius"/>
+    </declare-styleable>
+
 </resources>
