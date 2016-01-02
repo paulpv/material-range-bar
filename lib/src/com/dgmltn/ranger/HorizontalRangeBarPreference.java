@@ -5,13 +5,8 @@ import android.util.AttributeSet;
 
 public class HorizontalRangeBarPreference extends AbsRangeBarPreference {
     @SuppressWarnings("unused")
-    public HorizontalRangeBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    @SuppressWarnings("unused")
-    public HorizontalRangeBarPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
+    public HorizontalRangeBarPreference(Context context) {
+        super(context);
     }
 
     @SuppressWarnings("unused")
@@ -20,8 +15,8 @@ public class HorizontalRangeBarPreference extends AbsRangeBarPreference {
     }
 
     @SuppressWarnings("unused")
-    public HorizontalRangeBarPreference(Context context) {
-        super(context);
+    public HorizontalRangeBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
     }
 
     @Override

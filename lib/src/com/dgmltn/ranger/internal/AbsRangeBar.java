@@ -172,19 +172,17 @@ public abstract class AbsRangeBar extends View {
     }
 
     public AbsRangeBar(Context context, AttributeSet attrs, int defStyleAttr) {
-        this(context, attrs, defStyleAttr, 0);
-    }
-
-    public AbsRangeBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
+        super(context, attrs, defStyleAttr);
 
         mUiThreadId = Thread.currentThread().getId();
         mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
-        mFirstPinView = new PinView(context, "mFirstPinView");
-        mSecondPinView = new PinView(context, "mSecondPinView");
+        mFirstPinView = new PinView(context);
+        mFirstPinView.setName("mFirstPinView");
+        mSecondPinView = new PinView(context);
+        mSecondPinView.setName("mSecondPinView");
 
-        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.AbsRangeBar, defStyleAttr, defStyleRes);
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.AbsRangeBar);
         initialize(ta);
     }
 

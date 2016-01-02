@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
 
-version = "1.2.6"
-group = "com.swooby"
-archivesBaseName = "paulpv-android-material-range-bar-lib"
-description = "Material Range Bar Library for Android"
+version = '1.2.7'
+group = 'com.swooby'
+archivesBaseName = 'paulpv-android-material-range-bar-lib'
+description = 'Material Range Bar Library for Android'
 
 android {
 
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion '23.0.2'
 
     defaultConfig {
         minSdkVersion 18
@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.1.0'
+    compile 'com.android.support:support-v4:23.1.1'
 }
 
 apply plugin: 'maven'

@@ -58,13 +58,8 @@ public abstract class AbsRangeBarPreference
         this(context, attrs, 0);
     }
 
-
     public AbsRangeBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {
-        this(context, attrs, defStyleAttr, 0);
-    }
-
-    public AbsRangeBarPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
+        super(context, attrs, defStyleAttr);
         mAttributes = attrs;
         setLayoutResource(getLayoutResource());
     }

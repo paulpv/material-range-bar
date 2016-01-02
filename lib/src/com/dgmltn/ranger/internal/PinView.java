@@ -22,10 +22,10 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.util.AttributeSet;
 import android.view.View;
 
 import com.dgmltn.ranger.R;
-import com.dgmltn.ranger.internal.AbsRangeBar;
 
 /**
  * Represents a thumb in the RangeBar slider. This is the handle for the slider
@@ -47,7 +47,7 @@ public class PinView extends View {
 
     // Member Variables ////////////////////////////////////////////////////////
 
-    private final String mName;
+    private String mName;
 
     // Radius (in pixels) of the touch area of the thumb.
     private float mTargetRadiusPx;
@@ -91,9 +91,17 @@ public class PinView extends View {
 
     // Constructors ////////////////////////////////////////////////////////////
 
-    public PinView(Context context, String name) {
+
+    public PinView(Context context) {
         super(context);
-        mName = name;
+    }
+
+    public PinView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public PinView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
     }
 
     @Override
@@ -103,6 +111,10 @@ public class PinView extends View {
                 "mIndex=" + mIndex +
                 ", mIsPressed=" + mIsPressed +
                 '}';
+    }
+
+    public void setName(String name) {
+        mName = name;
     }
 
     // Initialization //////////////////////////////////////////////////////////
