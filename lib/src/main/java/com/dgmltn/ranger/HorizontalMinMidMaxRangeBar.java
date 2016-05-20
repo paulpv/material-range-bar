@@ -1,19 +1,17 @@
 package com.dgmltn.ranger;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.dgmltn.ranger.internal.AbsRangeBar;
-import com.pebblebee.common.logging.PbLog;
 
 // TODO:(pv) Give appropriate generic name and move in to material-range-bar
 public class HorizontalMinMidMaxRangeBar
         extends RelativeLayout
 {
-    private static final String TAG = PbLog.TAG(HorizontalMinMidMaxRangeBar.class);
+    //private static final String TAG = PbLog.TAG(HorizontalMinMidMaxRangeBar.class);
 
     public interface HorizontalMinMaxSummaryRangeBarListener
     {
@@ -82,7 +80,8 @@ public class HorizontalMinMidMaxRangeBar
         {
             return;
         }
-        final TypedArray array = context.obtainStyledAttributes(attrs, com.pebblebee.common.R.styleable.Pb3dTextureView);
+        /*
+        final TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.Pb3dTextureView);
         final int count = array.getIndexCount();
         for (int i = 0; i < count; ++i)
         {
@@ -90,6 +89,7 @@ public class HorizontalMinMidMaxRangeBar
             // ...
         }
         array.recycle();
+        */
     }
 
     private void init()
@@ -107,10 +107,10 @@ public class HorizontalMinMidMaxRangeBar
             @Override
             public void onRangeChanged(AbsRangeBar rangeBar, int firstIndex, int secondIndex, boolean fromUser)
             {
-                PbLog.e(TAG, "onRangeChanged(rangeBar, firstIndex=" + firstIndex +
-                             ", secondIndex=" + secondIndex +
-                             ", fromUser=" + fromUser + ')');
-                PbLog.e(TAG, "onRangeChanged: mTrackingTouch=" + mTrackingTouch);
+                //PbLog.e(TAG, "onRangeChanged(rangeBar, firstIndex=" + firstIndex +
+                //             ", secondIndex=" + secondIndex +
+                //             ", fromUser=" + fromUser + ')');
+                //PbLog.e(TAG, "onRangeChanged: mTrackingTouch=" + mTrackingTouch);
                 if (fromUser && !mTrackingTouch)
                 {
                     syncRangeBar(rangeBar);
@@ -120,16 +120,16 @@ public class HorizontalMinMidMaxRangeBar
             @Override
             public void onStartTrackingTouch(AbsRangeBar rangeBar)
             {
-                PbLog.e(TAG, "onStartTrackingTouch: rangeBar.getFirstPinIndex()=" + rangeBar.getFirstPinIndex());
-                PbLog.e(TAG, "onStartTrackingTouch: rangeBar.getSecondPinIndex()=" + rangeBar.getSecondPinIndex());
+                //PbLog.e(TAG, "onStartTrackingTouch: rangeBar.getFirstPinIndex()=" + rangeBar.getFirstPinIndex());
+                //PbLog.e(TAG, "onStartTrackingTouch: rangeBar.getSecondPinIndex()=" + rangeBar.getSecondPinIndex());
                 mTrackingTouch = true;
             }
 
             @Override
             public void onStopTrackingTouch(AbsRangeBar rangeBar)
             {
-                PbLog.e(TAG, "onStopTrackingTouch: rangeBar.getFirstPinIndex()=" + rangeBar.getFirstPinIndex());
-                PbLog.e(TAG, "onStopTrackingTouch: rangeBar.getSecondPinIndex()=" + rangeBar.getSecondPinIndex());
+                //PbLog.e(TAG, "onStopTrackingTouch: rangeBar.getFirstPinIndex()=" + rangeBar.getFirstPinIndex());
+                //PbLog.e(TAG, "onStopTrackingTouch: rangeBar.getSecondPinIndex()=" + rangeBar.getSecondPinIndex());
                 mTrackingTouch = false;
                 syncRangeBar(rangeBar);
             }
@@ -165,17 +165,17 @@ public class HorizontalMinMidMaxRangeBar
 
     private int indexToValue(int index)
     {
-        PbLog.e(TAG, "indexToValue(index=" + index + ')');
+        //PbLog.e(TAG, "indexToValue(index=" + index + ')');
         int value = index + mValueMin;
-        PbLog.e(TAG, "indexToValue: value=" + value);
+        //PbLog.e(TAG, "indexToValue: value=" + value);
         return value;
     }
 
     private int valueToIndex(int value)
     {
-        PbLog.e(TAG, "valueToIndex(value=" + value + ')');
+        //PbLog.e(TAG, "valueToIndex(value=" + value + ')');
         int index = value - mValueMin;
-        PbLog.e(TAG, "valueToIndex: index=" + index);
+        //PbLog.e(TAG, "valueToIndex: index=" + index);
         return index;
     }
 
@@ -357,7 +357,7 @@ public class HorizontalMinMidMaxRangeBar
 
     private void syncRangeBar(AbsRangeBar rangeBar)
     {
-        PbLog.e(TAG, "syncRangeBar(rangeBar)");
+        //PbLog.e(TAG, "syncRangeBar(rangeBar)");
 
         int firstPinValue = indexToValue(rangeBar.getFirstPinIndex());
         int secondPinValue = indexToValue(rangeBar.getSecondPinIndex());
@@ -365,12 +365,12 @@ public class HorizontalMinMidMaxRangeBar
         {
             if (callRangeChangeListener(firstPinValue, secondPinValue))
             {
-                PbLog.e(TAG, "syncRangeBar: setPinValues(...)");
+                //PbLog.e(TAG, "syncRangeBar: setPinValues(...)");
                 setPinValues(firstPinValue, secondPinValue);
             }
             else
             {
-                PbLog.e(TAG, "syncRangeBar: ignoring and restoring previous pin values");
+                //PbLog.e(TAG, "syncRangeBar: ignoring and restoring previous pin values");
                 rangeBar.setPinIndices(valueToIndex(mFirstPinValue), valueToIndex(mSecondPinValue));
             }
         }

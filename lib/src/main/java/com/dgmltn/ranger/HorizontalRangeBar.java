@@ -6,14 +6,13 @@ import android.graphics.PointF;
 import android.util.AttributeSet;
 
 import com.dgmltn.ranger.internal.AbsRangeBar;
-import com.pebblebee.common.logging.PbLog;
 
 /**
  * Created by doug on 10/21/15.
  */
 public class HorizontalRangeBar extends AbsRangeBar {
 
-    private static final String TAG = PbLog.TAG(HorizontalRangeBar.class);
+    //private static final String TAG = PbLog.TAG(HorizontalRangeBar.class);
 
     // Endpoints of the horizontal bar
     private float mLeftX;
