@@ -28,8 +28,8 @@ android {
 }
 
 bintray {
-    user = project.hasProperty('bintray.user') ? project.getProperty('bintray.user') : null
-    key = project.hasProperty('bintray.apikey') ? project.getProperty('bintray.apikey') : null
+    user = project.hasProperty('BINTRAY_USER') ? project.getProperty('BINTRAY_USER') : null
+    key = project.hasProperty('BINTRAY_APIKEY') ? project.getProperty('BINTRAY_APIKEY') : null
 
     configurations = ['archives']
 
