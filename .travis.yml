@@ -1,4 +1,15 @@
-language: android
+branches:
+  only:
+  - master
+
+env:
+  matrix:
+  - secure: ZNGiKDEJJfz3p2nbk5s9Zw7se+bVPSj1Hqwdog0eiawsqTwHXXUCrKIkspRoM/zi7K1GWg3aTrU7IQmtbCiBjsD6rbY6oEP7s5wZ2hii0QQD2VDUkV5FFHclUjYCj1ffrW/bC4E/Iy2gzwKRwch1S8zaBc3cJgnk5310Trxz4wCVN0EujNj8/4M2gvtXpuVPUGVJT2+ujtWgd/RRkjJwS054ZWgssj9qJABRwza1yVueMho/vamsKkMI1/7ekKBEym/JBtGV+6plCjydLCj+XDwkTqohECzA/j/kx0N1eI5xUz6rd2IKTBCjDL61seojxgvAbdIBgN38EQ7wn2rNX+mbpVYnq+aLApEtUc3MHY1ho8/kUJmr0OMuw6C8bhzzuDt7s0GiN/4klVwxeN3HRQcTzAZZJErmukZKGAtpsXCXoRow6xrjuIuPuPZS5n6WVNS9XIOLeE8t5cSbYrBG0clWUaNSSIUlLHKgaIab3udY0or4slpQtcCQAwWt8jQXNg2sHgXbghM90msczl9/sXNgdQlXHJfbycvZUXf6YCMoruEChpyBkebxL2ahTcuhUjxxYi3lF4D2gdudCTlMnnMBnn5xaYrEfCgpGGMZjL2zNS0wZsB9oGzrY7b161SO2Wmrwye+F1HgDgrvqs+jg495jiHroAs2CTi7aoZMRhI=
+  - secure: kU5JP95ATdqOHhczc0kv7p9n/FfXIhUftf6wxbH3dk6J+izCpqiVpBvh7fzIwiUkFrS847/2X5uhbafEBNx9vbc+iin1XS3bbraj+thDDuymOEGeWlJu4nkBKbSBho71BLARMqPmuaLOymteQnmmbiBx16S3e9ggxKQFFUxx4mbE0rZLKsqs8FXaeo667D2yjeEXEajRRQz8oPp0OSLItDeiIbbbKrDGquFDy4hDf66LLe2+h9gSZEds7iUhonE+HtQLK79spU5t/7flAN4ljxZV1ey539NE96v37EqcxBkDbKre0KFO+mSmlTgPPwTIseJtgJCUbszSyxNUVx8FDK/rZEH6CIu3ftevaUs1AMm4vRNDs+VQIGONK4eBZcDJ2fQFghKv7RV+U6MkM3bCBH5FS7AhL6hslSLSbK3N7Uf1UsXHtEGQX7bZfRcm7A488RZZKNKmEX5gIdRdrtkys69+2K/PywI/3SUCObo8Ardsn7+mChQi7HUJUudRSacYv9xc4iFVq7v1OAvWOcN2p5z9Sa7y/yERsC2SnL/r3Q/zc9YPxvXg9BWNy/UbM5AtGLsy071iZAMbcY8PlHzuW65aufyt1dYSb+IytM4jk4JRT9LNaWadm5ELlitgoXejEAhmBzd/Q80u9Po7Q6WV0hJw5qJj0FvSeyuwaIL0Lm8=
+
+language:
+  android
+
 android:
   components:
     # Uncomment the lines below if you want to
@@ -22,5 +33,6 @@ android:
     # if you need to run emulator(s) during your tests
     # - sys-img-armeabi-v7a-android-19
     # - sys-img-x86-android-17
+
 script:
-    - ./gradlew bintrayUpload
+  - "./gradlew bintrayUpload -Pbintray.user=$bintray.user -Pbintray.apikey$bintray.apikey"
