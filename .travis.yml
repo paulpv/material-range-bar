@@ -32,4 +32,4 @@ android:
   # - sys-img-x86-android-17
 
 script:
-- "./gradlew bintrayUpload -Pbintray.user=$bintray.user -Pbintray.apikey$bintray.apikey"
+- "./gradlew bintrayUpload -PBINTRAY_USER=$BINTRAY_USER -PBINTRAY_APIKEY$BINTRAY_APIKEY"
