@@ -20,8 +20,10 @@ import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -60,7 +62,7 @@ public class PinView extends View {
 
     // mPaint to draw the thumbs if attributes are selected
 
-    private Paint mTextPaint;
+    private TextPaint mTextPaint;
 
     private Drawable mPin;
 
@@ -147,7 +149,8 @@ public class PinView extends View {
         mPinRadiusPx = (int) ((pinRadiusDP == -1 ? DEFAULT_THUMB_RADIUS_DP : pinRadiusDP) * mDensity);
 
         // Creates the paint and sets the Paint values
-        mTextPaint = new Paint();
+        mTextPaint = new TextPaint();
+        mTextPaint.setTypeface(Typeface.MONOSPACE);
         mTextPaint.setColor(textColor);
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(15f * mDensity);

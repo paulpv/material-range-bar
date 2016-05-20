@@ -71,24 +71,6 @@ public class ArcRangeBar extends AbsRangeBar {
         mBounds.offset(dx, dy);
     }
 
-    private void calculateBounds() {
-        PointF test = new PointF(mCenter.x - mRadius, mCenter.y);
-        getNearestPointOnBar(test, test);
-        mBounds.set(test.x, test.y, test.x, test.y);
-
-        test.set(mCenter.x + mRadius, mCenter.y);
-        getNearestPointOnBar(test, test);
-        mBounds.union(test.x, test.y);
-
-        test.set(mCenter.x, mCenter.y - mRadius);
-        getNearestPointOnBar(test, test);
-        mBounds.union(test.x, test.y);
-
-        test.set(mCenter.x, mCenter.y + mRadius);
-        getNearestPointOnBar(test, test);
-        mBounds.union(test.x, test.y);
-    }
-
     @Override
     public int comparePointsOnBar(PointF point1, PointF point2) {
         float angle1 = getNormalizedAngle(point1);
@@ -145,6 +127,24 @@ public class ArcRangeBar extends AbsRangeBar {
     }
 
     // Private members /////////////////////////////////////////////////////////////
+
+    private void calculateBounds() {
+        PointF test = new PointF(mCenter.x - mRadius, mCenter.y);
+        getNearestPointOnBar(test, test);
+        mBounds.set(test.x, test.y, test.x, test.y);
+
+        test.set(mCenter.x + mRadius, mCenter.y);
+        getNearestPointOnBar(test, test);
+        mBounds.union(test.x, test.y);
+
+        test.set(mCenter.x, mCenter.y - mRadius);
+        getNearestPointOnBar(test, test);
+        mBounds.union(test.x, test.y);
+
+        test.set(mCenter.x, mCenter.y + mRadius);
+        getNearestPointOnBar(test, test);
+        mBounds.union(test.x, test.y);
+    }
 
     /**
      * Returns the angle between 0 and the point.

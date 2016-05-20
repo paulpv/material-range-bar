@@ -70,7 +70,7 @@ public abstract class AbsRangeBar extends View {
 
     // Member Variables ////////////////////////////////////////////////////////
 
-    //private static final String TAG = PbLog.TAG("AbsRangeBar");
+    //private static final String TAG = PbLog.TAG(AbsRangeBar.class);
 
     // Default values for variables
     private static final int DEFAULT_TICK_COUNT = 5;
@@ -287,11 +287,13 @@ public abstract class AbsRangeBar extends View {
         bundle.putFloat("SELECTOR_SIZE", mSelectorSize);
         bundle.putInt("FIRST_SELECTOR_COLOR", mFirstSelectorColor);
         bundle.putInt("SECOND_SELECTOR_COLOR", mSecondSelectorColor);
+
         bundle.putFloat("PIN_RADIUS", mPinRadius);
         bundle.putFloat("EXPANDED_PIN_RADIUS", mExpandedPinRadius);
         bundle.putFloat("PIN_PADDING", mPinPadding);
         bundle.putBoolean("IS_RANGE_BAR", mIsRangeBar);
         bundle.putBoolean("ARE_PINS_TEMPORARY", mArePinsTemporary);
+
         bundle.putInt("FIRST_PIN_INDEX", getFirstPinIndex());
         bundle.putInt("SECOND_PIN_INDEX", getSecondPinIndex());
 
@@ -308,17 +310,20 @@ public abstract class AbsRangeBar extends View {
 
             Bundle bundle = (Bundle) state;
 
+            mBarWeight = bundle.getFloat("BAR_WEIGHT");
+            mBarColor = bundle.getInt("BAR_COLOR");
+
             mTickCount = bundle.getInt("TICK_COUNT");
             mTickColor = bundle.getInt("TICK_COLOR");
             mTickSize = bundle.getFloat("TICK_SIZE");
-            mBarWeight = bundle.getFloat("BAR_WEIGHT");
-            mBarColor = bundle.getInt("BAR_COLOR");
-            mSelectorSize = bundle.getFloat("SELECTOR_SIZE");
-            mFirstSelectorColor = bundle.getInt("FIRST_SELECTOR_COLOR");
-            mSecondSelectorColor = bundle.getInt("SECOND_SELECTOR_COLOR");
+
             mConnectingLineWeight = bundle.getFloat("CONNECTING_LINE_WEIGHT");
             mFirstConnectingLineColor = bundle.getInt("FIRST_CONNECTING_LINE_COLOR");
             mSecondConnectingLineColor = bundle.getInt("SECOND_CONNECTING_LINE_COLOR");
+
+            mSelectorSize = bundle.getFloat("SELECTOR_SIZE");
+            mFirstSelectorColor = bundle.getInt("FIRST_SELECTOR_COLOR");
+            mSecondSelectorColor = bundle.getInt("SECOND_SELECTOR_COLOR");
 
             mPinRadius = bundle.getFloat("PIN_RADIUS");
             mExpandedPinRadius = bundle.getFloat("EXPANDED_PIN_RADIUS");
@@ -326,7 +331,9 @@ public abstract class AbsRangeBar extends View {
             mIsRangeBar = bundle.getBoolean("IS_RANGE_BAR");
             mArePinsTemporary = bundle.getBoolean("ARE_PINS_TEMPORARY");
 
-            setPinIndices(bundle.getInt("FIRST_PIN_INDEX"), bundle.getInt("SECOND_PIN_INDEX"));
+            int firstPinIndex = bundle.getInt("FIRST_PIN_INDEX");
+            int secondPinIndex = bundle.getInt("SECOND_PIN_INDEX");
+            setPinIndices(firstPinIndex, secondPinIndex);
 
             mMinPinFont = bundle.getFloat("MIN_PIN_FONT");
             mMaxPinFont = bundle.getFloat("MAX_PIN_FONT");
@@ -677,7 +684,7 @@ public abstract class AbsRangeBar extends View {
             secondIndex = maxSecondIndex;
         }
 
-        int maxFirstIndex = mSecondPinView.getIndex() - 1;
+        int maxFirstIndex = secondIndex - 1;
         //PbLog.e(TAG, "setTickCount: maxFirstIndex=" + maxFirstIndex);
         int firstIndex = mFirstPinView.getIndex();
         //PbLog.e(TAG, "setTickCount: firstIndex=" + firstIndex);
@@ -696,7 +703,7 @@ public abstract class AbsRangeBar extends View {
     /**
      * Sets the size (radius) of the ticks in the range bar.
      *
-     * @param size Float size the height of each tick mark in px.
+     * @param size float size the height of each tick mark in px.
      */
     public void setTickHeight(float size) {
         mTickSize = size;
@@ -706,7 +713,7 @@ public abstract class AbsRangeBar extends View {
     /**
      * Set the weight of the bar line and the tick lines in the range bar.
      *
-     * @param barWeight Float specifying the weight of the bar and tick lines in
+     * @param barWeight float specifying the weight of the bar and tick lines in
      *                  px.
      */
     public void setBarWeight(float barWeight) {
@@ -866,7 +873,7 @@ public abstract class AbsRangeBar extends View {
     /**
      * Set the weight of the connecting line between the thumbs.
      *
-     * @param connectingLineWeight Float specifying the weight of the connecting
+     * @param connectingLineWeight float specifying the weight of the connecting
      *                             line.
      */
     public void setConnectingLineWeight(float connectingLineWeight) {
@@ -915,7 +922,7 @@ public abstract class AbsRangeBar extends View {
      * If this is set, the thumb images will be replaced with a circle of the
      * specified radius. Default width = 20dp.
      *
-     * @param pinRadius Float specifying the radius of the thumbs to be drawn.
+     * @param pinRadius float specifying the radius of the thumbs to be drawn.
      */
     public void setPinRadius(float pinRadius) {
         mExpandedPinRadius = pinRadius;
@@ -1002,6 +1009,7 @@ public abstract class AbsRangeBar extends View {
     }
 
     private boolean setPinIndices(int firstPinIndex, int secondPinIndex, PinView draggingPin, PointF point) {
+        //PbLog.e(TAG, "setPinIndices(firstPinIndex=" + firstPinIndex + ", secondPinIndex=" + secondPinIndex + ", draggingPin=" + draggingPin + ", point=" + point + ')');
 
         boolean changed = false;
 
@@ -1233,7 +1241,7 @@ public abstract class AbsRangeBar extends View {
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    mPinRadius = (Float) (animation.getAnimatedValue());
+                    mPinRadius = (Float) animation.getAnimatedValue();
                     thumb.setSize(mPinRadius, mPinPadding * animation.getAnimatedFraction());
                     invalidate();
                 }

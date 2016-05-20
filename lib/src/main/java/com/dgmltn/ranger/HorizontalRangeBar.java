@@ -6,11 +6,14 @@ import android.graphics.PointF;
 import android.util.AttributeSet;
 
 import com.dgmltn.ranger.internal.AbsRangeBar;
+import com.pebblebee.common.logging.PbLog;
 
 /**
  * Created by doug on 10/21/15.
  */
 public class HorizontalRangeBar extends AbsRangeBar {
+
+    private static final String TAG = PbLog.TAG(HorizontalRangeBar.class);
 
     // Endpoints of the horizontal bar
     private float mLeftX;
@@ -51,7 +54,15 @@ public class HorizontalRangeBar extends AbsRangeBar {
 
     @Override
     public void getNearestPointOnBar(PointF pointIn, PointF pointOut) {
+        //PbLog.e(TAG, "getNearestPointOnBar");
         pointOut.set(Math.min(mRightX, Math.max(mLeftX, pointIn.x)), mY);
+    }
+
+    @Override
+    public int getNearestIndex(PointF point) {
+        //PbLog.w(TAG, "getNearestIndex(point=" + point + ')');
+        float tickDistance = getTickDistance();
+        return (int) ((point.x - mLeftX + tickDistance / 2f) / tickDistance);
     }
 
     @Override
@@ -62,12 +73,6 @@ public class HorizontalRangeBar extends AbsRangeBar {
         } else {
             pointOut.set(mLeftX + (getTickDistance() * index), mY);
         }
-    }
-
-    @Override
-    public int getNearestIndex(PointF point) {
-        float tickDistance = getTickDistance();
-        return (int) ((point.x - mLeftX + tickDistance / 2f) / tickDistance);
     }
 
     @Override
@@ -84,6 +89,8 @@ public class HorizontalRangeBar extends AbsRangeBar {
             canvas.drawLine(left.x, mY, right.x, mY, mFirstConnectingLinePaint);
         }
     }
+
+    // Private members /////////////////////////////////////////////////////////////
 
     private float getTickDistance() {
         return (mRightX - mLeftX) / (getTickCount() - 1f);

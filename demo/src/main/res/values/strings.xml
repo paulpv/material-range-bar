@@ -33,7 +33,7 @@
     <string name="Use_Float_labels">Use Float labels</string>
     <string name="Use_Char_labels">Use Char labels</string>
     <string name="Disable">Disable</string>
-    <string-array translatable="false" name="default_color_choice_values">
+    <string-array name="default_color_choice_values" translatable="false">
         <item>#33b5e5</item>
         <item>#aa66cc</item>
         <item>#99cc00</item>
