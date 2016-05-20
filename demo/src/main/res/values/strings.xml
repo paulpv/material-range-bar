@@ -21,9 +21,7 @@
     <string name="confirmDefaultColor">Default</string>
     <string name="colorPickerTitle">Select a Color</string>
     <string name="resetThumbColors">Reset Thumb Colors</string>
-    <string name="leftIndexValue">0</string>
     <string name="leftIndex">Left</string>
-    <string name="rightIndexValue">6</string>
     <string name="rightIndex">Right</string>
     <string name="indexSet">Set By Index</string>
     <string name="valueSet">Set By Value</string>
@@ -35,7 +33,7 @@
     <string name="Use_Float_labels">Use Float labels</string>
     <string name="Use_Char_labels">Use Char labels</string>
     <string name="Disable">Disable</string>
-    <string-array translatable="false" name="default_color_choice_values">
+    <string-array name="default_color_choice_values" translatable="false">
         <item>#33b5e5</item>
         <item>#aa66cc</item>
         <item>#99cc00</item>
