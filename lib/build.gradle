@@ -5,7 +5,7 @@ apply plugin: 'com.jfrog.bintray'
 archivesBaseName = 'swooby-android-material-range-bar-lib'
 description = 'Material Range Bar Library for Android'
 group = 'com.swooby'
-version = '1.5.0'
+version = '1.5.1'
 
 def siteUrl = 'https://github.com/swooby/material-range-bar'
 def gitUrl = 'https://github.com/swooby/material-range-bar.git'
