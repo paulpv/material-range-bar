@@ -2,10 +2,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-archivesBaseName = 'swooby-android-material-range-bar-lib'
+archivesBaseName = 'swooby-android-lib-material-range-bar'
 description = 'Material Range Bar Library for Android'
 group = 'com.swooby'
-version = '1.5.1'
+version = '1.6.0'
 
 def siteUrl = 'https://github.com/swooby/material-range-bar'
 def gitUrl = 'https://github.com/swooby/material-range-bar.git'

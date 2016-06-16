@@ -272,18 +272,11 @@ public class HorizontalMinMidMaxRangeBar
 
     public void setPinValues(int firstPinValue, int secondPinValue)
     {
-        /*
-        if (firstPinValue >= secondPinValue)
-        {
-            throw new IllegalArgumentException(
-                    "firstPinValue(" + firstPinValue + ") must be < secondPinValue(" + secondPinValue + ')');
-        }
-        */
         if (firstPinValue < mValueMin)
         {
             firstPinValue = mValueMin;
         }
-        if (secondPinValue > mValueMax)
+        if (secondPinValue > mValueMax || secondPinValue <= firstPinValue)
         {
             secondPinValue = mValueMax;
         }
