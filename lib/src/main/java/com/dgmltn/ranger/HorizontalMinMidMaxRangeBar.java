@@ -33,8 +33,8 @@ public class HorizontalMinMidMaxRangeBar
     }
 
     // Reasonable default min and max values
-    private int DEFAULT_VALUE_MIN = -42;
-    private int DEFAULT_VALUE_MAX = 42;
+    private int DEFAULT_VALUE_MIN = -100;
+    private int DEFAULT_VALUE_MAX = 100;
 
     private HorizontalMinMaxSummaryRangeBarListener mListener;
 
@@ -272,11 +272,13 @@ public class HorizontalMinMidMaxRangeBar
 
     public void setPinValues(int firstPinValue, int secondPinValue)
     {
+        /*
         if (firstPinValue >= secondPinValue)
         {
             throw new IllegalArgumentException(
                     "firstPinValue(" + firstPinValue + ") must be < secondPinValue(" + secondPinValue + ')');
         }
+        */
         if (firstPinValue < mValueMin)
         {
             firstPinValue = mValueMin;
